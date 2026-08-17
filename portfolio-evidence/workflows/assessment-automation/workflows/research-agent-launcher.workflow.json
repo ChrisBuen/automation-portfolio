@@ -1,0 +1,358 @@
+{
+  "name": "WF-RA Research Agent Launcher",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "case_id",
+              "type": "number"
+            },
+            {
+              "name": "ra_codes_json",
+              "type": "string"
+            },
+            {
+              "name": "include_infrastructure_research",
+              "type": "boolean"
+            },
+            {
+              "name": "force_relaunch",
+              "type": "boolean"
+            },
+            {
+              "name": "runner_url",
+              "type": "string"
+            },
+            {
+              "name": "output_base_path",
+              "type": "string"
+            },
+            {
+              "name": "launched_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "d1f57884-0697-518a-bea2-40479b37fee7",
+      "name": "RA Launcher Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        420
+      ],
+      "notes": "MCP/SUB-WORKFLOW ENTRY POINT - launches the applicable Research Agent jobs for a case. Normally called by CAR Trigger MCP.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.case_id, c.applicant_id, c.applicant_type, c.licence_target, c.primary_contact_name, c.primary_contact_email, c.folder_root_id, c.folder_url, c.intake_data, COALESCE(json_agg(cd.metadata) FILTER (WHERE cd.status = 'received' AND cd.metadata IS NOT NULL), '[]'::json) AS received_documents\nFROM car_cases c\nLEFT JOIN car_case_documents cd ON cd.case_id = c.case_id\nWHERE c.case_id = $1\nGROUP BY c.case_id\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}"
+        }
+      },
+      "id": "5bfd8bfc-4554-5e0a-a0e4-92d4c46796b6",
+      "name": "Postgres: Load Case Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        320,
+        420
+      ],
+      "notes": "CASE CONTEXT - loads applicant metadata, folder references, intake JSON, and received document metadata for RA prompt payloads.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const caseRow = $input.first().json;\nconst trigger = $('RA Launcher Trigger').first().json;\n\nfunction parseList(value) {\n  if (!value) return [];\n  if (Array.isArray(value)) return value;\n  const text = String(value).trim();\n  if (!text) return [];\n  try {\n    const parsed = JSON.parse(text);\n    return Array.isArray(parsed) ? parsed : [];\n  } catch (e) {\n    return text.split(',').map(v => v.trim()).filter(Boolean);\n  }\n}\n\nconst applicantType = caseRow.applicant_type;\nlet required = [];\nif (applicantType === 'Individual') {\n  required = ['RA-01', 'RA-06'];\n} else if (applicantType === 'Corporate') {\n  required = ['RA-02', 'RA-06'];\n} else if (applicantType === 'Fund') {\n  required = ['RA-02', 'RA-03', 'RA-04', 'RA-06'];\n}\n\nconst includeInfra = [true, 'true', 'yes', '1', 1].includes(trigger.include_infrastructure_research);\nif (includeInfra && !required.includes('RA-05')) required.push('RA-05');\n\nconst override = parseList(trigger.ra_codes_json || trigger.ra_codes);\nconst raCodes = override.length ? override : required;\nif (!raCodes.length) {\n  throw new Error(`No RA codes resolved for case ${caseRow.case_id} (${applicantType})`);\n}\n\nconst skillMap = {\n  'RA-00': '003 Research Agents/RA-00 Preliminary Background Screen/SKILL.md',\n  'RA-01': '003 Research Agents/RA-01 Individual Background Research/SKILL.md',\n  'RA-02': '003 Research Agents/RA-02 Company Research/SKILL.md',\n  'RA-03': '003 Research Agents/RA-03 Fund Asset Class & Market Research/SKILL.md',\n  'RA-04': '003 Research Agents/RA-04 Legal Counsel Quality Assessment/SKILL.md',\n  'RA-05': '003 Research Agents/RA-05 Infrastructure & Exchange Research/SKILL.md',\n  'RA-06': '003 Research Agents/RA-06 Background Checks/SKILL.md'\n};\nconst signalMap = {\n  'RA-01': 'ra01_ready', 'RA-02': 'ra02_ready', 'RA-03': 'ra03_ready',\n  'RA-04': 'ra04_ready', 'RA-05': 'ra05_ready', 'RA-06': 'ra06_ready'\n};\n\nconst outputBase = trigger.output_base_path || `client/${caseRow.applicant_id}/outputs/03_Research_Agents`;\nconst envRunnerUrl = (typeof $env !== 'undefined' && $env.CAR_RA_RUNNER_URL) ? $env.CAR_RA_RUNNER_URL : '';\nconst runnerUrl = String(trigger.runner_url || envRunnerUrl || '').trim();\nconst launchedBy = trigger.launched_by || 'CAR Trigger MCP';\nconst forceRelaunch = [true, 'true', 'yes', '1', 1].includes(trigger.force_relaunch);\n\nreturn raCodes.map(code => {\n  const raCode = String(code).toUpperCase().replace('_', '-');\n  if (!skillMap[raCode]) throw new Error(`Unsupported RA code: ${code}`);\n  return {\n    json: {\n      case_id: caseRow.case_id,\n      applicant_id: caseRow.applicant_id,\n      applicant_type: applicantType,\n      applicant_name: caseRow.primary_contact_name,\n      applicant_email: caseRow.primary_contact_email,\n      licence_target: caseRow.licence_target,\n      folder_root_id: caseRow.folder_root_id,\n      folder_url: caseRow.folder_url,\n      intake_data: caseRow.intake_data,\n      received_documents: caseRow.received_documents || [],\n      agent: raCode,\n      signal_type: signalMap[raCode] || null,\n      skill_path: skillMap[raCode],\n      output_base_path: outputBase,\n      output_md_path: `${outputBase}/${raCode.toLowerCase()}_${caseRow.applicant_id}.md`,\n      output_json_path: `${outputBase}/machine_json/${raCode.toLowerCase()}_${caseRow.applicant_id}.json`,\n      runner_url: runnerUrl,\n      runner_configured: !!runnerUrl,\n      force_relaunch: forceRelaunch,\n      launched_by: launchedBy,\n      launch_notes: trigger.notes || null\n    }\n  };\n});"
+      },
+      "id": "3a85889e-9a38-5636-af49-4c6ead75d829",
+      "name": "Code: Determine Required RAs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        420
+      ],
+      "notes": "RA ROUTER - chooses the RA set from applicant_type unless MCP provides an override list. Emits one item per RA job.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO car_case_ra (case_id, agent, status, report_json)\nVALUES ($1, $2, 'launched', jsonb_build_object('launched_at', now(), 'launched_by', $3::text, 'skill_path', $4::text, 'output_md_path', $5::text, 'output_json_path', $6::text, 'runner_configured', $7::boolean, 'launch_notes', $8::text))\nON CONFLICT (case_id, agent) DO UPDATE\nSET status = CASE WHEN $9::boolean THEN 'launched' ELSE car_case_ra.status END,\n    report_json = COALESCE(car_case_ra.report_json, '{}'::jsonb) || jsonb_build_object('last_launch_at', now(), 'last_launched_by', $3::text, 'skill_path', $4::text, 'output_md_path', $5::text, 'output_json_path', $6::text, 'runner_configured', $7::boolean, 'launch_notes', $8::text),\n    completed_at = CASE WHEN $9::boolean THEN NULL ELSE car_case_ra.completed_at END\nRETURNING\n  id AS ra_record_id,\n  case_id,\n  agent,\n  status AS persisted_status,\n  $10::text AS applicant_id,\n  $11::text AS applicant_type,\n  $12::text AS applicant_name,\n  $13::text AS applicant_email,\n  $14::text AS licence_target,\n  $15::text AS folder_root_id,\n  $16::text AS folder_url,\n  $17::text AS signal_type,\n  $18::text AS skill_path,\n  $19::text AS output_base_path,\n  $20::text AS output_md_path,\n  $21::text AS output_json_path,\n  $22::text AS runner_url,\n  $23::boolean AS runner_configured,\n  $24::text AS launched_by,\n  $25::text AS launch_notes;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},={{ $json.agent }},={{ $json.launched_by }},={{ $json.skill_path }},={{ $json.output_md_path }},={{ $json.output_json_path }},={{ $json.runner_configured }},={{ $json.launch_notes }},={{ $json.force_relaunch }},={{ $json.applicant_id }},={{ $json.applicant_type }},={{ $json.applicant_name }},={{ $json.applicant_email }},={{ $json.licence_target }},={{ $json.folder_root_id }},={{ $json.folder_url }},={{ $json.signal_type }},={{ $json.skill_path }},={{ $json.output_base_path }},={{ $json.output_md_path }},={{ $json.output_json_path }},={{ $json.runner_url }},={{ $json.runner_configured }},={{ $json.launched_by }},={{ $json.launch_notes }}"
+        }
+      },
+      "id": "f387fb8a-c8a9-502a-af5f-ff7656f6b9ae",
+      "name": "Postgres: Record RA Launch",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        800,
+        420
+      ],
+      "notes": "LAUNCH AUDIT - upserts car_case_ra as launched. If force_relaunch is false, existing completed records are not cleared.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({ json: item.json }));",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "a72945ca-2916-58d5-b617-1670f943cf94",
+      "name": "Code: Restore Launch Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        420
+      ],
+      "notes": "PAYLOAD RESTORE - Postgres returns audit fields only, so this re-attaches the RA runner payload for downstream branching.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "runner-configured",
+              "leftValue": "={{ $json.runner_configured }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ec62cb8e-9661-5f98-a1b8-b1933afb04fc",
+      "name": "IF: Runner URL Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        420
+      ],
+      "notes": "RUNNER GATE - true branch calls the configured RA runner URL. False branch records/announces manual launch required.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.runner_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ case_id: $json.case_id, applicant_id: $json.applicant_id, applicant_type: $json.applicant_type, applicant_name: $json.applicant_name, licence_target: $json.licence_target, folder_root_id: $json.folder_root_id, folder_url: $json.folder_url, agent: $json.agent, signal_type: $json.signal_type, skill_path: $json.skill_path, output_base_path: $json.output_base_path, output_md_path: $json.output_md_path, output_json_path: $json.output_json_path, completion_webhook_url: ($env.N8N_WEBHOOK_BASE || 'https://n8n.example.invalid') + '/webhook/car-ra-completion', launched_by: $json.launched_by, launch_notes: $json.launch_notes, intake_data: $json.intake_data, received_documents: $json.received_documents }) }}",
+        "options": {
+          "retryOnFail": true,
+          "maxTries": 2,
+          "waitBetweenTries": 3000
+        }
+      },
+      "id": "79e4ddc1-d77e-5975-88b9-bc20d33d48d0",
+      "name": "HTTP: Fire RA Runner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        280
+      ],
+      "notes": "EXTERNAL RA RUNNER CALL - posts one RA job to the configured runner. Runner should call /webhook/car-ra-completion when finished.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:417a81363c604f08801f073b0ea6e3b8@thread.v2",
+          "mode": "list",
+          "cachedResultName": "CAR Assessment Automation (group)"
+        },
+        "contentType": "html",
+        "message": "=<strong>RA launched</strong><br><strong>Case:</strong> {{ $json.applicant_id }} / {{ $json.case_id }}<br><strong>Agent:</strong> {{ $json.agent }}<br><strong>Output:</strong> <code>{{ $json.output_md_path }}</code><br><br>Runner URL was configured and the launch request was sent.",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "d8192dec-88e8-56b8-8592-b8808254b1cc",
+      "name": "Teams: RA Runner Fired",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        280
+      ],
+      "notes": "TEAMS NOTICE - confirms an RA job was sent to the external runner.",
+      "notesInFlow": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:417a81363c604f08801f073b0ea6e3b8@thread.v2",
+          "mode": "list",
+          "cachedResultName": "CAR Assessment Automation (group)"
+        },
+        "contentType": "html",
+        "message": "=<strong>Manual RA launch required</strong><br><strong>Case:</strong> {{ $json.applicant_id }} / {{ $json.case_id }}<br><strong>Agent:</strong> {{ $json.agent }}<br><strong>Skill:</strong> <code>{{ $json.skill_path }}</code><br><strong>Output:</strong> <code>{{ $json.output_md_path }}</code><br><br><code>CAR_RA_RUNNER_URL</code> is not configured. Run the RA manually and then submit completion through CAR Trigger MCP or <code>/webhook/car-ra-completion</code>.",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "329f6c40-fc6b-5e65-bee4-796abffb7e8e",
+      "name": "Teams: Manual RA Launch Required",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        560
+      ],
+      "notes": "TEAMS NOTICE - runner URL is absent, so staff/Codex must run this RA manually and record completion.",
+      "notesInFlow": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "RA Launcher Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Load Case Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Load Case Context": {
+      "main": [
+        [
+          {
+            "node": "Code: Determine Required RAs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Determine Required RAs": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Record RA Launch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Record RA Launch": {
+      "main": [
+        [
+          {
+            "node": "Code: Restore Launch Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Restore Launch Payload": {
+      "main": [
+        [
+          {
+            "node": "IF: Runner URL Configured?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Runner URL Configured?": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Fire RA Runner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Teams: Manual RA Launch Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Fire RA Runner": {
+      "main": [
+        [
+          {
+            "node": "Teams: RA Runner Fired",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

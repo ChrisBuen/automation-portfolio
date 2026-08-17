@@ -1,0 +1,4 @@
+interface:
+  display_name: "Contract Automation Governance and Risk Evaluation"
+  short_description: "Test contract automation for provenance, invented facts, leakage, and review readiness"
+  default_prompt: "Run fixed-case, provenance, leakage, document-integrity, and operational-reliance gates on this contract automation package."

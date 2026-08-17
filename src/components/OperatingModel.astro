@@ -1,0 +1,32 @@
+---
+interface Step {
+  index: string;
+  title: string;
+  description: string;
+}
+
+interface Props {
+  steps: readonly Step[];
+}
+
+const { steps } = Astro.props;
+---
+
+<section class="operating-model section-shell" aria-labelledby="model-title">
+  <div class="section-heading reveal-copy">
+    <p class="section-label">What the flagship reveals</p>
+    <h2 id="model-title">The tools change. The control discipline repeats.</h2>
+  </div>
+  <ol class="model-flow" data-model-flow>
+    {steps.map((step) => (
+      <li data-model-step data-state={step.title === "Review" ? "review" : "active"}>
+        <span>{step.index}</span>
+        <div>
+          <h3>{step.title}</h3>
+          <p>{step.description}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+  <p class="model-note"><span>Human control</span> is not a disclaimer at the end. It is a designed state inside the workflow.</p>
+</section>

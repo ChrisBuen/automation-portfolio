@@ -1,0 +1,10 @@
+{
+  "dataset": "presentation-market-series.csv",
+  "classification": "fictional-portfolio-fixture",
+  "periodStart": "2026-07-01",
+  "periodEnd": "2026-08-05",
+  "observations": 6,
+  "liveMarketData": false,
+  "investmentUseAllowed": false,
+  "sourceNote": "Values were invented to demonstrate the chart pipeline."
+}

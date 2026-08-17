@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Perspective Evidence-Based Decision Council"
+  short_description: "Challenge evidence through independent viewpoints while preserving material dissent"
+  default_prompt: "Use $orchestrate-decision-council to pressure-test this decision with independent seats."

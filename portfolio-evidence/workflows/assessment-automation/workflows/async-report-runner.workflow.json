@@ -1,0 +1,804 @@
+{
+  "name": "WF-CR03B Runner",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-cr03-runner",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        500
+      ],
+      "notes": "Triggered by WF-CR03A Submit (fire-and-forget). Expected input:\n{ job_id: UUID, case_id: BIGINT }",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_cr03_jobs\n   SET status = 'running', started_at = NOW()\n WHERE job_id = '{{ $json.job_id }}'\nRETURNING job_id, case_id;",
+        "options": {}
+      },
+      "id": "postgres-mark-running",
+      "name": "Postgres: Mark Job Running",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    c.case_id,\n    c.applicant_type,\n    c.applicant_id,\n    c.licence_target,\n    c.status,\n    c.created_at,\n    c.primary_contact_name AS applicant_name,\n    c.primary_contact_email AS applicant_email,\n    c.intake_data,\n\n    ck.raw_result                   AS kyc_result,\n    ck.kyc_provider                 AS kyc_provider,\n    ck.checked_at                   AS kyc_checked_at,\n\n    cra.analysis_json               AS reference_analysis,\n\n    ra1.report                      AS ra01_report,\n    ra2.report                      AS ra02_report,\n    ra3.report                      AS ra03_report,\n    ra4.report                      AS ra04_report,\n    ra5.report                      AS ra05_report,\n    ra6.report                      AS ra06_report,\n\n    COALESCE(json_agg(DISTINCT cm.analysis_json) FILTER (WHERE cm.analysis_json IS NOT NULL), '[]') AS meeting_analyses,\n    COALESCE(json_agg(DISTINCT cd.metadata) FILTER (WHERE cd.metadata IS NOT NULL AND cd.status = 'received'), '[]') AS documents,\n\n    gi.required_inputs,\n    gi.gate_triggered_at\n\nFROM car_cases c\nLEFT JOIN car_case_kyc ck               ON ck.case_id = c.case_id\nLEFT JOIN car_case_reference_analysis cra ON cra.case_id = c.case_id\nLEFT JOIN car_case_ra ra1               ON ra1.case_id = c.case_id AND ra1.agent = 'RA-01'\nLEFT JOIN car_case_ra ra2               ON ra2.case_id = c.case_id AND ra2.agent = 'RA-02'\nLEFT JOIN car_case_ra ra3               ON ra3.case_id = c.case_id AND ra3.agent = 'RA-03'\nLEFT JOIN car_case_ra ra4               ON ra4.case_id = c.case_id AND ra4.agent = 'RA-04'\nLEFT JOIN car_case_ra ra5               ON ra5.case_id = c.case_id AND ra5.agent = 'RA-05'\nLEFT JOIN car_case_ra ra6               ON ra6.case_id = c.case_id AND ra6.agent = 'RA-06'\nLEFT JOIN car_case_meetings cm          ON cm.case_id = c.case_id\nLEFT JOIN car_case_documents cd         ON cd.case_id = c.case_id\nLEFT JOIN car_case_gate_inputs gi       ON gi.case_id = c.case_id\n\nWHERE c.case_id = {{ $json.case_id }}\nGROUP BY\n    c.case_id, c.applicant_type, c.applicant_id, c.licence_target, c.status,\n    c.created_at, c.primary_contact_name, c.primary_contact_email, c.intake_data,\n    ck.raw_result, ck.kyc_provider, ck.checked_at,\n    cra.analysis_json,\n    ra1.report, ra2.report, ra3.report, ra4.report, ra5.report, ra6.report,\n    gi.required_inputs, gi.gate_triggered_at;",
+        "options": {}
+      },
+      "id": "postgres-aggregate-dd",
+      "name": "Postgres: Aggregate DD Inputs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Same join shape as dd_gate_main's aggregation query, extended with\nc.intake_data and c.licence_target (needed by the full CR-03 input\nschema's authorisation_sought extraction and report header).",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-is-fund",
+              "leftValue": "={{ $json.applicant_type }}",
+              "rightValue": "Fund",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "rightType": "value"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-is-fund",
+      "name": "IF: applicant_type = Fund?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        500
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ systemInstruction: { parts: [{ text: \"You are a senior fund due diligence analyst at Alpha Node, a regulated investment platform. Your task is to produce a focused Fund Mandate Risk Summary (CR-05) that will be used as a primary input to the full DD report. Analyse the fund's mandate, investment strategy, asset class concentration, legal structure, and key personnel. Identify alignment with Alpha Node's risk appetite and any material concerns. Be concise, evidence-based, and structured. Output must be valid JSON only, no prose outside the JSON structure.\" }] }, contents: [{ role: 'user', parts: [{ text: `Please produce a Fund Mandate Risk Summary for the following fund application:\\n\\nFUND DOCUMENTS (IM, Mandate):\\n${JSON.stringify($json.documents)}\\n\\nASSET CLASS: ${$json.ra03_report || 'Not available'}\\n\\nINVESTMENT MANAGER BACKGROUND:\\n${$json.ra01_report || 'Not available'}\\n\\nRA-03 ASSET CLASS RESEARCH:\\n${$json.ra03_report || 'Not available'}\\n\\nRA-04 LEGAL COUNSEL ASSESSMENT:\\n${$json.ra04_report || 'Not available'}\\n\\nRA-05 INFRASTRUCTURE ASSESSMENT:\\n${$json.ra05_report || 'Not applicable'}\\n\\nKYC RESULT:\\n${JSON.stringify($json.kyc_result)}\\n\\nReturn a JSON object with these required fields: mandate_summary (string), asset_class_assessment (string), investment_manager_assessment (string), legal_structure_assessment (string), infrastructure_assessment (string), risk_rating (enum: Low | Medium | High | Decline), key_concerns (array of strings), mandate_fit_conclusion (string).` }] }], generationConfig: { temperature: 0, maxOutputTokens: 4096, responseMimeType: 'application/json' } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-cr05-fund",
+      "name": "HTTP: CR-05 Fund Mandate Risk Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        380
+      ],
+      "notes": "Reused verbatim from WF-07 dd_gate_main — CR-05 itself is unchanged by\nthis project. Only CR-03 is being given the full-fidelity treatment here.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text;\n\nlet fundRiskSummary = null;\nif (text) {\n  try {\n    const cleaned = text.replace(/^```json\\n?|```$/gm, '').trim();\n    fundRiskSummary = JSON.parse(cleaned);\n  } catch (e) {\n    console.warn('CR-05: Could not parse Gemini response as JSON.');\n  }\n}\nif (!fundRiskSummary) {\n  fundRiskSummary = { raw_response: response, extraction_failed: true };\n}\n\nconst caseData = $('Postgres: Aggregate DD Inputs').first().json;\nreturn [{ json: { ...caseData, fund_risk_summary: fundRiskSummary, cr05_raw_response: response } }];"
+      },
+      "id": "code-extract-cr05",
+      "name": "Code: Extract CR-05 Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        380
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const caseData = $input.first().json;\nreturn [{ json: { ...caseData, fund_risk_summary: null, cr05_raw_response: null } }];"
+      },
+      "id": "code-non-fund-passthrough",
+      "name": "Code: Non-Fund Passthrough",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        620
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [$input.first()];"
+      },
+      "id": "code-merge-branches",
+      "name": "Code: Merge Branches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        500
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT bundle_key, content\nFROM car_policy_bundles\nWHERE bundle_key IN (\n    'cr03_core',\n    'cr03_risk_taxonomy'\n    {{ $json.applicant_type === 'Fund' ? \", 'cr03_fund_addon'\" : '' }}\n);",
+        "options": {}
+      },
+      "id": "postgres-fetch-policy",
+      "name": "Postgres: Fetch Policy Bundles",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1780,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Reads pre-loaded, quarterly-curated policy text — see SETUP.md\n\"Populate policy bundles\". n8n cannot read Source/MD/ directly.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const caseData = $('Code: Merge Branches').first().json;\nconst bundles = {};\nfor (const row of $input.all()) {\n  bundles[row.json.bundle_key] = row.json.content;\n}\n\nconst missing = ['cr03_core', 'cr03_risk_taxonomy'].filter(k => !bundles[k]);\nif (caseData.applicant_type === 'Fund' && !bundles['cr03_fund_addon']) missing.push('cr03_fund_addon');\nif (missing.length > 0) {\n  throw new Error(`CR-03: missing required policy bundle(s): ${missing.join(', ')}. Populate car_policy_bundles before running this workflow — see SETUP.md.`);\n}\n\n// --- authorisation_sought extraction (PLAN.md rule: never default downward to 'general') ---\nconst intake = caseData.intake_data || {};\nlet authorisationSought = intake.authorisation_sought || intake.section_4a || null;\nlet authorisationAssumed = false;\nif (!authorisationSought || !authorisationSought.advice_type) {\n  authorisationSought = {\n    advice_type: 'personal_wholesale',\n    client_class: authorisationSought?.client_class || 'wholesale',\n    service_types: authorisationSought?.service_types || ['advice'],\n    product_classes: authorisationSought?.product_classes || []\n  };\n  authorisationAssumed = true;\n}\n\n// --- Block 1: role and methodology (verbatim from PLAN.md) ---\nconst block1 = `You are Alpha Node's senior compliance analyst producing a formal Due Diligence report on an applicant for an AR, CAR, or Fund authorisation.\\n\\nYour output will be reviewed by senior staff, may be inspected by ASIC if a complaint arises, and forms part of the firm's permanent compliance record. Apply the standard of care that implies.\\n\\nMethodology:\\n1. Read all inputs. Cross-reference claims with verifying sources. Where claims are unverified, mark as outstanding.\\n2. Identify red flags (blocking concerns) and orange flags (proceed-with-attention concerns) explicitly. Do not bury them in narrative.\\n3. For individuals: apply the fit-and-proper test (competence, honesty/integrity, financial soundness).\\n4. For funds: assess mandate viability, structural transparency, asset class risk, infrastructure readiness, conflicts, insurance/tax, and in-house expertise.\\n5. Apply Alpha Node policy context (Block 3) to assess alignment.\\n6. Produce a recommended decision with reasoning that a regulator could follow.\\n7. List supervision recommendations specific to the identified risks of this applicant.\\n8. State the authorisation type sought (advice_type x client_class x service_types x product_classes) at the very top of the executive_summary field, before any biographical information. Calibrate the entire competence and qualification analysis against this scope. Do not assume general advice if the input says personal advice.\\n9. Cite the source of every factual claim in the executive_summary inline using square-bracket notation (e.g. [Application Form S1], [RA-01], [Kaplan Certificate]). The opening biographical paragraph must be fully sourced. Do not state facts without attribution.\\n10. Distinguish verified facts from assumed undertakings. A fact belongs in rationale or fit-and-proper narrative. An assumed undertaking belongs in the assumed_undertakings array, not in rationale as if already established. Never treat an assumed undertaking as a verified constraint on the applicant's behaviour.\\n\\nBe specific. Avoid hedging language unless genuine uncertainty exists. Cite the source of each finding.`;\n\nconst block2 = bundles['cr03_risk_taxonomy'];\nlet block3 = bundles['cr03_core'];\nif (caseData.applicant_type === 'Fund') block3 += '\\n\\n' + bundles['cr03_fund_addon'];\n\nconst systemPrompt = `${block1}\\n\\n---\\nRISK TAXONOMY:\\n${block2}\\n\\n---\\nALPHA NODE POLICY CONTEXT:\\n${block3}`;\n\n// --- User prompt: structured DD inputs ---\nconst userPrompt = `# DD Inputs for Case ${caseData.applicant_id}\\n\\n## Applicant Type: ${caseData.applicant_type}\\n## Licence Target: ${caseData.licence_target || 'Not specified'}\\n## Authorisation Sought${authorisationAssumed ? ' (ASSUMED — not explicit in intake, defaulted to the conservative personal_wholesale standard)' : ''}:\\n${JSON.stringify(authorisationSought)}\\n\\n## 1. Intake Data\\n${JSON.stringify(caseData.intake_data)}\\n\\n## 2. Documents Received\\n${JSON.stringify(caseData.documents)}\\n\\n## 3. KYC Result\\n${JSON.stringify(caseData.kyc_result)}\\n\\n## 4. Reference Analysis (CR-02 Output)\\n${JSON.stringify(caseData.reference_analysis)}\\n\\n## 5. Meeting Analyses (CR-01 Outputs)\\n${JSON.stringify(caseData.meeting_analyses)}\\n\\n## 6. Research Agent Reports\\n### RA-01 Individual Background\\n${caseData.ra01_report || 'Not applicable'}\\n### RA-02 Company Research\\n${caseData.ra02_report || 'Not applicable'}\\n### RA-03 Fund Asset Class Research\\n${caseData.ra03_report || 'Not applicable'}\\n### RA-04 Legal Counsel Assessment\\n${caseData.ra04_report || 'Not applicable'}\\n### RA-05 Infrastructure Research\\n${caseData.ra05_report || 'Not applicable'}\\n### RA-06 Background Checks\\n${caseData.ra06_report || 'Not applicable'}\\n\\n## 7. Fund Mandate Risk Summary (CR-05 Output)\\n${caseData.fund_risk_summary ? JSON.stringify(caseData.fund_risk_summary) : 'Not applicable'}\\n\\n---\\nNow produce the DD report using the submit_dd_report tool.`;\n\n// --- submit_dd_report tool schema, cleaned for Gemini's OpenAPI-subset function-calling format ---\n// (type unions like [\"string\",\"null\"] become nullable: true; otherwise matches PLAN.md's tool definition)\nconst submitDdReportSchema = {\n  name: 'submit_dd_report',\n  description: 'Submit the structured DD report for senior staff review',\n  parameters: {\n    type: 'object',\n    properties: {\n      executive_summary: { type: 'string' },\n      risk_rating: { type: 'string', enum: ['low', 'medium', 'high', 'decline'] },\n      recommended_decision: { type: 'string', enum: ['proceed', 'proceed_with_conditions', 'decline'] },\n      rationale: { type: 'string' },\n      fit_and_proper_assessment: {\n        type: 'object',\n        nullable: true,\n        properties: {\n          overall: { type: 'string', enum: ['satisfied', 'satisfied_with_conditions', 'not_satisfied'] },\n          competence: { type: 'string' },\n          honesty_and_integrity: { type: 'string' },\n          financial_soundness: { type: 'string' }\n        }\n      },\n      fund_specific_findings: {\n        type: 'object',\n        nullable: true,\n        properties: {\n          mandate_viability: { type: 'string' },\n          structural_transparency: { type: 'string' },\n          asset_class_risk: { type: 'string' },\n          infrastructure_readiness: { type: 'string' },\n          conflicts_of_interest: { type: 'string' },\n          insurance_and_tax_position: { type: 'string' },\n          in_house_expertise_assessment: { type: 'string' }\n        }\n      },\n      red_flags: {\n        type: 'array',\n        items: {\n          type: 'object',\n          properties: {\n            flag: { type: 'string' },\n            source: { type: 'string' },\n            severity: { type: 'string', enum: ['minor', 'moderate', 'serious', 'blocking'] },\n            evidence: { type: 'string' },\n            mitigation: { type: 'string', nullable: true }\n          },\n          required: ['flag', 'source', 'severity', 'evidence']\n        }\n      },\n      orange_flags: {\n        type: 'array',\n        items: {\n          type: 'object',\n          properties: { flag: { type: 'string' }, source: { type: 'string' }, evidence: { type: 'string' } }\n        }\n      },\n      outstanding_items: { type: 'array', items: { type: 'string' } },\n      conditions: {\n        type: 'array',\n        items: {\n          type: 'object',\n          properties: {\n            severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },\n            condition: { type: 'string' },\n            owner: { type: 'string', enum: ['applicant', 'alphanode'] },\n            deadline: { type: 'string' },\n            finding_link: { type: 'string', nullable: true }\n          },\n          required: ['severity', 'condition', 'owner', 'deadline']\n        }\n      },\n      supervision_recommendations: { type: 'array', items: { type: 'string' } },\n      assumed_undertakings: {\n        type: 'array',\n        items: {\n          type: 'object',\n          properties: {\n            undertaking: { type: 'string' },\n            source: { type: 'string', enum: ['CR-01_meeting', 'Form03_Section12', 'both'] },\n            effective_date: { type: 'string', nullable: true },\n            breach_consequence: { type: 'string' }\n          },\n          required: ['undertaking', 'source']\n        }\n      },\n      sources_reviewed: {\n        type: 'array',\n        items: {\n          type: 'object',\n          properties: {\n            id: { type: 'string' },\n            title: { type: 'string' },\n            date: { type: 'string', nullable: true },\n            type: { type: 'string', enum: ['internal_ra', 'client_document', 'public_register', 'regulator_record', 'court_or_tribunal', 'professional_record', 'media_or_web', 'policy', 'other'] },\n            summary: { type: 'string' },\n            file: { type: 'string', nullable: true },\n            url: { type: 'string', nullable: true },\n            used_by: { type: 'array', items: { type: 'string' } }\n          },\n          required: ['id', 'title', 'type', 'summary']\n        }\n      }\n    },\n    required: ['executive_summary', 'risk_rating', 'recommended_decision', 'rationale', 'red_flags', 'orange_flags', 'outstanding_items', 'supervision_recommendations', 'sources_reviewed']\n  }\n};\n\nconst geminiRequest = {\n  systemInstruction: { parts: [{ text: systemPrompt }] },\n  contents: [{ role: 'user', parts: [{ text: userPrompt }] }],\n  tools: [{ functionDeclarations: [submitDdReportSchema] }],\n  toolConfig: { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['submit_dd_report'] } },\n  generationConfig: { temperature: 0, maxOutputTokens: 12000 }\n};\n\nreturn [{ json: { ...caseData, authorisation_sought: authorisationSought, authorisation_assumed: authorisationAssumed, geminiRequest, attempt: 1 } }];"
+      },
+      "id": "code-build-full-prompt",
+      "name": "Code: Build Full CR-03 Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        500
+      ],
+      "notes": "Assembles the full 3-block system prompt (role/methodology, risk\ntaxonomy, Alpha Node policy context) and the complete submit_dd_report\ntool schema from PLAN.md — this is the fidelity gap vs. dd_gate_main's\ninline simplified prompt.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.geminiRequest) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "http-cr03-full",
+      "name": "HTTP: CR-03 Full (Attempt 1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        500
+      ],
+      "notes": "Function-calling call — forces the submit_dd_report tool via\ntoolConfig.mode = ANY. Timeout 180s per PLAN.md's estimated 60-90s+\ngeneration time for the largest of all the routines.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const caseData = $('Code: Build Full CR-03 Prompt').first().json;\nconst response = $input.first().json;\nconst part = response.candidates?.[0]?.content?.parts?.find(p => p.functionCall);\nconst args = part?.functionCall?.args;\n\nconst errors = [];\nif (!args) {\n  errors.push('No submit_dd_report function call returned by the model.');\n} else {\n  if (args.risk_rating === 'decline' !== (args.recommended_decision === 'decline')) errors.push('risk_rating=decline must match recommended_decision=decline (and vice versa).');\n  if (args.recommended_decision === 'proceed_with_conditions' && !(args.conditions && args.conditions.length > 0)) errors.push('recommended_decision=proceed_with_conditions requires a non-empty conditions array.');\n  if (caseData.applicant_type === 'Individual' && !args.fit_and_proper_assessment) errors.push('applicant_type=Individual requires fit_and_proper_assessment.');\n  if (caseData.applicant_type === 'Fund' && !args.fund_specific_findings) errors.push('applicant_type=Fund requires fund_specific_findings.');\n  if ((args.red_flags || []).some(f => !f.evidence)) errors.push('Every red flag requires non-empty evidence.');\n  if (!args.executive_summary || args.executive_summary.length < 200 || args.executive_summary.length > 1500) errors.push('executive_summary must be between 200 and 1500 characters.');\n  if ((caseData.meeting_analyses || []).length === 0 && caseData.applicant_type === 'Individual') errors.push('No meeting_analyses present for an Individual applicant — this should have been caught at submit time.');\n}\n\nreturn [{\n  json: {\n    ...caseData,\n    dd_report: args || null,\n    cr03_raw_response: response,\n    valid: errors.length === 0,\n    validation_errors: errors,\n    input_token_count: response.usageMetadata?.promptTokenCount || null,\n    output_token_count: response.usageMetadata?.candidatesTokenCount || null\n  }\n}];"
+      },
+      "id": "code-extract-validate-1",
+      "name": "Code: Extract & Validate (Attempt 1)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        500
+      ],
+      "notes": "Implements PLAN.md's programmatically-checkable Quality Checks. The\nqualitative PREFLIGHT.md 30-point self-check is not automated here —\nsenior staff still review before acting on the decision.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-valid-1",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-valid-1",
+      "name": "IF: Valid (Attempt 1)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2660,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $input.first().json;\nconst correctivePrompt = `Your previous submit_dd_report call failed validation for these reasons:\\n${prev.validation_errors.map(e => '- ' + e).join('\\n')}\\n\\nCall submit_dd_report again, correcting these issues. Do not repeat the same mistakes.`;\n\nconst request = JSON.parse(JSON.stringify(prev.geminiRequest));\nrequest.contents.push({ role: 'model', parts: [{ functionCall: { name: 'submit_dd_report', args: prev.dd_report || {} } }] });\nrequest.contents.push({ role: 'user', parts: [{ text: correctivePrompt }] });\n\nreturn [{ json: { ...prev, geminiRequest: request, attempt: 2 } }];"
+      },
+      "id": "code-build-corrective",
+      "name": "Code: Build Corrective Retry Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2660,
+        700
+      ],
+      "notes": "PLAN.md Error Handling: \"Output validation fails -> Retry once with\nexplicit correction; if still fails, save raw output and escalate.\"",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.geminiRequest) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "http-cr03-retry",
+      "name": "HTTP: CR-03 Full (Attempt 2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        700
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const caseData = $('Code: Build Corrective Retry Prompt').first().json;\nconst response = $input.first().json;\nconst part = response.candidates?.[0]?.content?.parts?.find(p => p.functionCall);\nconst args = part?.functionCall?.args;\n\nconst errors = [];\nif (!args) {\n  errors.push('No submit_dd_report function call returned by the model on retry.');\n} else {\n  if (args.risk_rating === 'decline' !== (args.recommended_decision === 'decline')) errors.push('risk_rating=decline must match recommended_decision=decline (and vice versa).');\n  if (args.recommended_decision === 'proceed_with_conditions' && !(args.conditions && args.conditions.length > 0)) errors.push('recommended_decision=proceed_with_conditions requires a non-empty conditions array.');\n  if (caseData.applicant_type === 'Individual' && !args.fit_and_proper_assessment) errors.push('applicant_type=Individual requires fit_and_proper_assessment.');\n  if (caseData.applicant_type === 'Fund' && !args.fund_specific_findings) errors.push('applicant_type=Fund requires fund_specific_findings.');\n  if ((args.red_flags || []).some(f => !f.evidence)) errors.push('Every red flag requires non-empty evidence.');\n  if (!args.executive_summary || args.executive_summary.length < 200 || args.executive_summary.length > 1500) errors.push('executive_summary must be between 200 and 1500 characters.');\n}\n\nreturn [{\n  json: {\n    ...caseData,\n    dd_report: args || null,\n    cr03_raw_response: response,\n    valid: errors.length === 0,\n    validation_errors: errors,\n    input_token_count: response.usageMetadata?.promptTokenCount || null,\n    output_token_count: response.usageMetadata?.candidatesTokenCount || null\n  }\n}];"
+      },
+      "id": "code-extract-validate-2",
+      "name": "Code: Extract & Validate (Attempt 2)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        700
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-valid-2",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-valid-2",
+      "name": "IF: Valid (Attempt 2)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3320,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_cr03_jobs\n   SET status = 'failed',\n       attempt = {{ $json.attempt }},\n       error = '{{ JSON.stringify($json.validation_errors).replace(/'/g, \"''\") }}',\n       completed_at = NOW()\n WHERE job_id = '{{ $('Postgres: Mark Job Running').first().json.job_id }}';",
+        "options": {}
+      },
+      "id": "postgres-mark-failed",
+      "name": "Postgres: Mark Job Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3540,
+        800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "PLAN.md: \"if still fails, save raw output and escalate to AI engineer.\"\nThe raw cr03_raw_response is not persisted here to keep this query simple\n— extend if you want the full raw payload retained for escalation.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst r = d.dd_report;\n\nconst riskBadge = { low: 'LOW', medium: 'MEDIUM', high: 'HIGH', decline: 'DECLINE' }[r.risk_rating] || r.risk_rating;\nconst decisionBadge = { proceed: 'PROCEED', proceed_with_conditions: 'PROCEED WITH CONDITIONS', decline: 'DECLINE' }[r.recommended_decision] || r.recommended_decision;\n\nconst detailedAssessment = [\n  ['Executive Summary', 'Top-line synthesis and authorisation scope', r.executive_summary],\n  d.applicant_type === 'Individual' && r.fit_and_proper_assessment ? ['Fit and Proper', 'Competence, honesty/integrity, financial soundness', JSON.stringify(r.fit_and_proper_assessment)] : null,\n  d.applicant_type === 'Fund' && r.fund_specific_findings ? ['Fund-Specific Findings', 'Mandate, structure, asset class, infrastructure, conflicts, insurance/tax, expertise', JSON.stringify(r.fund_specific_findings)] : null\n].filter(Boolean);\n\nconst detailedRows = detailedAssessment.map(([item, what, assess]) => `| ${item} | ${what} | ${assess.replace(/\\|/g, '/').slice(0, 500)} |`).join('\\n');\n\nconst conditionsRows = (r.conditions || []).map(c => `| ${c.severity} | ${c.condition} | ${c.owner} | ${c.deadline} |`).join('\\n') || '| _None_ | | | |';\n\nconst redFlagsMd = (r.red_flags || []).length\n  ? r.red_flags.map(f => `- **[${f.severity.toUpperCase()}]** ${f.flag} (source: ${f.source})\\n  Evidence: ${f.evidence}${f.mitigation ? `\\n  Mitigation: ${f.mitigation}` : ''}`).join('\\n')\n  : '_None identified._';\n\nconst orangeFlagsMd = (r.orange_flags || []).length\n  ? r.orange_flags.map(f => `- ${f.flag} (source: ${f.source}) — ${f.evidence}`).join('\\n')\n  : '_None identified._';\n\nconst outstandingMd = (r.outstanding_items || []).length ? r.outstanding_items.map(i => `- ${i}`).join('\\n') : '_None._';\nconst supervisionMd = (r.supervision_recommendations || []).length ? r.supervision_recommendations.map(i => `- ${i}`).join('\\n') : '_None._';\n\nconst undertakingsRows = (r.assumed_undertakings || []).map(u => `| ${u.undertaking} | ${u.source} | ${u.effective_date || 'TBD'} | ${u.breach_consequence || 'Not specified'} |`).join('\\n') || '| _None_ | | | |';\n\nconst sourcesRows = (r.sources_reviewed || []).map(s => `| ${s.id} | ${s.title} | ${s.type} | ${s.summary.slice(0, 200)} |`).join('\\n') || '| _None recorded_ | | | |';\n\nconst ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst reportPath = `/Applicants/${d.applicant_id}/06_DD_Report/dd_report_${ts}.md`;\nconst reportJsonPath = `/Applicants/${d.applicant_id}/06_DD_Report/dd_report_${ts}.json`;\n\nconst md = `# Due Diligence Report\\n\\n**Case ID:** ${d.case_id}  \\n**Applicant:** ${d.applicant_name}  \\n**Applicant Type:** ${d.applicant_type}  \\n**Licence Target:** ${d.licence_target || 'Not specified'}  \\n**Authorisation Sought:** ${JSON.stringify(d.authorisation_sought)}${d.authorisation_assumed ? ' _(assumed — see note below)_' : ''}  \\n**Generated:** ${new Date().toISOString()}  \\n**Model:** gemini-2.5-flash (CR-03, full PLAN.md/SKILL.md prompt, generation_method=wf_cr03_async_full)\\n\\n---\\n\\n## Recommendation\\n\\n| Risk Rating | Recommended Decision |\\n|---|---|\\n| ${riskBadge} | ${decisionBadge} |\\n\\n## Legend\\n\\n- **Red flag severities:** minor < moderate < serious < blocking\\n- **Condition severities:** low < medium < high < critical (critical = pre-LOA/pre-appointment/pre-capital-call/pre-launch gating)\\n\\n## Executive Summary\\n\\n${r.executive_summary}\\n\\n---\\n\\n## Detailed Assessment\\n\\n| Item | What it covers | Assessment |\\n|---|---|---|\\n${detailedRows}\\n\\n## Rationale\\n\\n${r.rationale}\\n\\n## Red Flags\\n\\n${redFlagsMd}\\n\\n## Orange Flags\\n\\n${orangeFlagsMd}\\n\\n## Outstanding Items\\n\\n${outstandingMd}\\n\\n## Conditions\\n\\n| Severity | Condition | Owner | Deadline |\\n|---|---|---|---|\\n${conditionsRows}\\n\\n## Assumed Undertakings\\n\\n| Undertaking | Source | Effective Date | Breach Consequence |\\n|---|---|---|---|\\n${undertakingsRows}\\n\\n## Supervision Recommendations\\n\\n${supervisionMd}\\n\\n## Sources Reviewed\\n\\n| ID | Title | Type | Summary |\\n|---|---|---|---|\\n${sourcesRows}\\n\\n---\\n\\n_This report was generated by Alpha Node's WF-CR03 Async Report Generator (full PLAN.md/SKILL.md/PREFLIGHT fidelity, attempt ${d.attempt}). PDF rendering is a manual step — see 002 Claude Routines/CR-03 DD Report Generation/PLAN.md \\\"PDF Generation\\\". It must be reviewed and approved by a qualified senior officer before any decision is acted upon._\\n`;\n\nreturn [{ json: { ...d, report_markdown: md, report_path: reportPath, report_json_path: reportJsonPath, report_timestamp: ts } }];"
+      },
+      "id": "code-render-report2",
+      "name": "Code: Render Report 2 Markdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ],
+      "notes": "Follows PLAN.md's Report 2 presentation standard: recommendation table,\nlegend, executive summary before dense detail, detailed-assessment table,\nconditions table, annexes for flags/outstanding items, sources-reviewed\ntable. PDF rendering (generate_report2_pdf.py) remains a manual step —\nsee SETUP.md.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO car_case_dd_report (\n    case_id,\n    fund_risk_summary,\n    executive_summary,\n    risk_rating,\n    fund_specific_findings,\n    red_flags,\n    orange_flags,\n    outstanding_items,\n    recommended_decision,\n    conditions,\n    rationale,\n    cr03_raw_response,\n    cr05_raw_response,\n    report_md_path,\n    report_json_path,\n    model_used,\n    input_token_count,\n    output_token_count,\n    authorisation_sought,\n    fit_and_proper_assessment,\n    fund_specific_findings_struct,\n    assumed_undertakings,\n    supervision_recommendations,\n    sources_reviewed,\n    generation_method\n) VALUES (\n    {{ $json.case_id }},\n    {{ $json.fund_risk_summary ? JSON.stringify($json.fund_risk_summary) + \"'::jsonb\" : 'NULL' }},\n    '{{ $json.dd_report.executive_summary.replace(/'/g, \"''\") }}',\n    '{{ $json.dd_report.risk_rating }}',\n    {{ $json.dd_report.fund_specific_findings ? \"'\" + JSON.stringify($json.dd_report.fund_specific_findings).replace(/'/g, \"''\") + \"'\" : 'NULL' }},\n    '{{ JSON.stringify($json.dd_report.red_flags).replace(/'/g, \"''\") }}'::jsonb,\n    '{{ JSON.stringify($json.dd_report.orange_flags).replace(/'/g, \"''\") }}'::jsonb,\n    '{{ JSON.stringify($json.dd_report.outstanding_items).replace(/'/g, \"''\") }}'::jsonb,\n    '{{ $json.dd_report.recommended_decision }}',\n    '{{ JSON.stringify($json.dd_report.conditions || []).replace(/'/g, \"''\") }}'::jsonb,\n    '{{ $json.dd_report.rationale.replace(/'/g, \"''\") }}',\n    '{{ JSON.stringify($json.cr03_raw_response).replace(/'/g, \"''\") }}'::jsonb,\n    {{ $json.cr05_raw_response ? \"'\" + JSON.stringify($json.cr05_raw_response).replace(/'/g, \"''\") + \"'::jsonb\" : 'NULL' }},\n    '{{ $json.report_path }}',\n    '{{ $json.report_json_path }}',\n    'gemini-2.5-flash',\n    {{ $json.input_token_count || 'NULL' }},\n    {{ $json.output_token_count || 'NULL' }},\n    '{{ JSON.stringify($json.authorisation_sought).replace(/'/g, \"''\") }}'::jsonb,\n    {{ $json.dd_report.fit_and_proper_assessment ? \"'\" + JSON.stringify($json.dd_report.fit_and_proper_assessment).replace(/'/g, \"''\") + \"'::jsonb\" : 'NULL' }},\n    {{ $json.dd_report.fund_specific_findings ? \"'\" + JSON.stringify($json.dd_report.fund_specific_findings).replace(/'/g, \"''\") + \"'::jsonb\" : 'NULL' }},\n    '{{ JSON.stringify($json.dd_report.assumed_undertakings || []).replace(/'/g, \"''\") }}'::jsonb,\n    '{{ JSON.stringify($json.dd_report.supervision_recommendations).replace(/'/g, \"''\") }}'::jsonb,\n    '{{ JSON.stringify($json.dd_report.sources_reviewed).replace(/'/g, \"''\") }}'::jsonb,\n    'wf_cr03_async_full'\n)\nRETURNING report_id;",
+        "options": {}
+      },
+      "id": "postgres-save-report",
+      "name": "Postgres: Save DD Report",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3100,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Requires schema_additions.sql applied first (adds authorisation_sought,\nfit_and_proper_assessment, fund_specific_findings_struct,\nassumed_undertakings, supervision_recommendations, sources_reviewed,\ngeneration_method columns to car_case_dd_report).",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://graph.microsoft.com/v1.0/drives/{{ $env.SHAREPOINT_DRIVE_ID }}/root:/Compliance/DD Reports/={{ $('Code: Render Report 2 Markdown').item.json.report_path.split('/').pop() }}:/content",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $('Code: Render Report 2 Markdown').item.json.report_markdown }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "storage-save-md",
+      "name": "Storage: Save Report Markdown",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3320,
+        220
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://graph.microsoft.com/v1.0/drives/{{ $env.SHAREPOINT_DRIVE_ID }}/root:/Compliance/DD Reports/={{ $('Code: Render Report 2 Markdown').item.json.report_json_path.split('/').pop() }}:/content",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify($('Code: Render Report 2 Markdown').item.json.dd_report, null, 2) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "storage-save-json",
+      "name": "Storage: Save Report JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3320,
+        380
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_cr03_jobs\n   SET status = 'complete',\n       report_id = '{{ $('Postgres: Save DD Report').first().json.report_id }}',\n       attempt = {{ $('Code: Render Report 2 Markdown').first().json.attempt }},\n       completed_at = NOW()\n WHERE job_id = '{{ $('Postgres: Mark Job Running').first().json.job_id }}';",
+        "options": {}
+      },
+      "id": "postgres-mark-complete",
+      "name": "Postgres: Mark Job Complete",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3540,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Mark Job Running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Mark Job Running": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Aggregate DD Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Aggregate DD Inputs": {
+      "main": [
+        [
+          {
+            "node": "IF: applicant_type = Fund?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: applicant_type = Fund?": {
+      "main": [
+        [
+          {
+            "node": "HTTP: CR-05 Fund Mandate Risk Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Non-Fund Passthrough",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: CR-05 Fund Mandate Risk Summary": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract CR-05 Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract CR-05 Result": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Non-Fund Passthrough": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Merge Branches": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Fetch Policy Bundles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Fetch Policy Bundles": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Full CR-03 Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Full CR-03 Prompt": {
+      "main": [
+        [
+          {
+            "node": "HTTP: CR-03 Full (Attempt 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: CR-03 Full (Attempt 1)": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract & Validate (Attempt 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract & Validate (Attempt 1)": {
+      "main": [
+        [
+          {
+            "node": "IF: Valid (Attempt 1)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Valid (Attempt 1)?": {
+      "main": [
+        [
+          {
+            "node": "Code: Render Report 2 Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Build Corrective Retry Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Corrective Retry Prompt": {
+      "main": [
+        [
+          {
+            "node": "HTTP: CR-03 Full (Attempt 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: CR-03 Full (Attempt 2)": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract & Validate (Attempt 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract & Validate (Attempt 2)": {
+      "main": [
+        [
+          {
+            "node": "IF: Valid (Attempt 2)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Valid (Attempt 2)?": {
+      "main": [
+        [
+          {
+            "node": "Code: Render Report 2 Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres: Mark Job Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Render Report 2 Markdown": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Save DD Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Save DD Report": {
+      "main": [
+        [
+          {
+            "node": "Storage: Save Report Markdown",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Storage: Save Report JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storage: Save Report Markdown": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Mark Job Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storage: Save Report JSON": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Mark Job Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}

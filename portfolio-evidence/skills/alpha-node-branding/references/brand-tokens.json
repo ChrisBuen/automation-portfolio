@@ -1,0 +1,52 @@
+{
+  "brand": {
+    "name": "Alpha Node",
+    "positioning": "Regulated, transparent, innovative digital-asset finance for institutional and high-net-worth investors.",
+    "tone": ["confident", "regulated", "transparent", "modern", "institutional", "precise"]
+  },
+  "colors": {
+    "pantone_302": {
+      "name": "Pantone 302",
+      "hex": "#004165",
+      "usage": "Primary deep blue"
+    },
+    "pantone_298": {
+      "name": "Pantone 298",
+      "hex": "#00B7E4",
+      "usage": "Bright cyan accent"
+    },
+    "pantone_magenta": {
+      "name": "Pantone Magenta",
+      "hex": "#D33982",
+      "usage": "Magenta highlight or call-to-action accent"
+    },
+    "pantone_296": {
+      "name": "Pantone 296",
+      "hex": "#031E2F",
+      "usage": "Dark slate foundation"
+    },
+    "white": {
+      "name": "White",
+      "hex": "#FFFFFF",
+      "usage": "Neutral and contrast"
+    }
+  },
+  "typography": {
+    "primary": "Futura PT",
+    "bundledFallback": ["Gilmer Regular", "Gilmer Medium", "Gilmer Heavy"],
+    "webFallbackStack": "Futura PT, Gilmer, Avenir Next, Montserrat, Arial, sans-serif"
+  },
+  "logoRules": {
+    "clearSpace": "Minimum space equal to the logo height on all sides.",
+    "aspectRatio": "Preserve the original logo aspect ratio exactly. Never stretch, squash, or independently scale width and height.",
+    "misuse": [
+      "Do not slant",
+      "Do not stretch or squash",
+      "Do not recolor outside approved brand colors",
+      "Do not warp or distort",
+      "Do not add transparency",
+      "Do not apply special effects",
+      "Do not place on low-contrast backgrounds"
+    ]
+  }
+}

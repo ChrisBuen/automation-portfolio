@@ -1,0 +1,21 @@
+---
+const links = [
+  { href: "#onboarding", label: "Flagship" },
+  { href: "#systems", label: "All systems" },
+  { href: "#methods", label: "Methods" },
+  { href: "#documents", label: "Proof" },
+];
+---
+
+<header class="site-header" data-site-header>
+  <a class="wordmark" href="#top" aria-label="ChrisBuen, back to top">
+    <span aria-hidden="true">CB</span>
+    <span>ChrisBuen</span>
+  </a>
+  <nav aria-label="Primary navigation">
+    <ul>
+      {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+    </ul>
+  </nav>
+  <span class="availability"><span aria-hidden="true"></span> Evidence-led systems</span>
+</header>

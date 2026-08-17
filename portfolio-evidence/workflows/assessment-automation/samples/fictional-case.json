@@ -1,0 +1,9 @@
+{
+  "caseId": "DEMO-ASSESSMENT-001",
+  "applicantType": "fictional-corporate-applicant",
+  "currentStage": "evidence_gap",
+  "supplied": ["identity", "entity", "intended_activity"],
+  "missing": ["ownership", "mandate"],
+  "automatedDecisionAllowed": false,
+  "humanReviewRequired": true
+}

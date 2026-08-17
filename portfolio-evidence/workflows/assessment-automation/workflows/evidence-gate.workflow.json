@@ -1,0 +1,828 @@
+{
+  "name": "WF-07-C DD Gate Main",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-dd-gate-main",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        400
+      ],
+      "notes": "Triggered by WF-07-A (Signal Completion) after all required DD flags are set.\nExpected input: { case_id: BIGINT }",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    c.case_id,\n    c.applicant_type,\n    c.applicant_id,\n    c.status,\n    c.created_at,\n    c.primary_contact_name AS applicant_name,\n    c.primary_contact_email AS applicant_email,\n\n    -- KYC result\n    ck.raw_result                   AS kyc_result,\n    ck.kyc_provider                 AS kyc_provider,\n    ck.checked_at                   AS kyc_checked_at,\n\n    -- Reference analysis\n    cra.analysis_json               AS reference_analysis,\n\n    -- Research agent reports\n    ra1.report                      AS ra01_report,\n    ra2.report                      AS ra02_report,\n    ra3.report                      AS ra03_report,\n    ra4.report                      AS ra04_report,\n    ra5.report                      AS ra05_report,\n    ra6.report                      AS ra06_report,\n\n    -- Meeting analyses (all meetings for this case)\n    COALESCE(json_agg(DISTINCT cm.analysis_json) FILTER (WHERE cm.analysis_json IS NOT NULL), '[]') AS meeting_analyses,\n\n    -- Received documents metadata\n    COALESCE(json_agg(DISTINCT cd.metadata) FILTER (WHERE cd.metadata IS NOT NULL AND cd.status = 'received'), '[]') AS documents,\n\n    -- Gate state\n    gi.required_inputs,\n    gi.gate_triggered_at\n\nFROM car_cases c\nLEFT JOIN car_case_kyc ck               ON ck.case_id = c.case_id\nLEFT JOIN car_case_reference_analysis cra ON cra.case_id = c.case_id\nLEFT JOIN car_case_ra ra1               ON ra1.case_id = c.case_id AND ra1.agent = 'RA-01'\nLEFT JOIN car_case_ra ra2               ON ra2.case_id = c.case_id AND ra2.agent = 'RA-02'\nLEFT JOIN car_case_ra ra3               ON ra3.case_id = c.case_id AND ra3.agent = 'RA-03'\nLEFT JOIN car_case_ra ra4               ON ra4.case_id = c.case_id AND ra4.agent = 'RA-04'\nLEFT JOIN car_case_ra ra5               ON ra5.case_id = c.case_id AND ra5.agent = 'RA-05'\nLEFT JOIN car_case_ra ra6               ON ra6.case_id = c.case_id AND ra6.agent = 'RA-06'\nLEFT JOIN car_case_meetings cm          ON cm.case_id = c.case_id\nLEFT JOIN car_case_documents cd         ON cd.case_id = c.case_id\nLEFT JOIN car_case_gate_inputs gi       ON gi.case_id = c.case_id\n\nWHERE c.case_id = '{{ $json.case_id }}'\nGROUP BY\n    c.case_id, c.applicant_type, c.applicant_id, c.status,\n    c.created_at, c.primary_contact_name, c.primary_contact_email,\n    ck.raw_result, ck.kyc_provider, ck.checked_at,\n    cra.analysis_json,\n    ra1.report, ra2.report, ra3.report, ra4.report, ra5.report, ra6.report,\n    gi.required_inputs, gi.gate_triggered_at;",
+        "options": {}
+      },
+      "id": "postgres-aggregate-dd",
+      "name": "Postgres: Aggregate DD Inputs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Full aggregation join query. Estimated 20â€“60k tokens of context when\nall RA reports are populated. Indexes on case_id across all tables are\nrequired for acceptable latency.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-is-fund",
+              "leftValue": "={{ $json.applicant_type }}",
+              "rightValue": "Fund",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "rightType": "value"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-is-fund",
+      "name": "IF: applicant_type = Fund?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ],
+      "notes": "Routes Fund applicants through CR-05 (Fund Mandate Risk Summary)\nbefore the main CR-03 DD Report call.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ systemInstruction: { parts: [{ text: \"You are a senior fund due diligence analyst at Alpha Node, a regulated investment platform. Your task is to produce a focused Fund Mandate Risk Summary (CR-05) that will be used as a primary input to the full DD report. Analyse the fund's mandate, investment strategy, asset class concentration, legal structure, and key personnel. Identify alignment with Alpha Node's risk appetite and any material concerns. Be concise, evidence-based, and structured. Output must be valid JSON only, no prose outside the JSON structure.\" }] }, contents: [{ role: 'user', parts: [{ text: `Please produce a Fund Mandate Risk Summary for the following fund application:\\n\\nFUND DOCUMENTS (IM, Mandate):\\n${JSON.stringify($json.documents)}\\n\\nASSET CLASS: ${$json.ra03_report || 'Not available'}\\n\\nINVESTMENT MANAGER BACKGROUND:\\n${$json.ra01_report || 'Not available'}\\n\\nRA-03 ASSET CLASS RESEARCH:\\n${$json.ra03_report || 'Not available'}\\n\\nRA-04 LEGAL COUNSEL ASSESSMENT:\\n${$json.ra04_report || 'Not available'}\\n\\nRA-05 INFRASTRUCTURE ASSESSMENT:\\n${$json.ra05_report || 'Not applicable'}\\n\\nKYC RESULT:\\n${JSON.stringify($json.kyc_result)}\\n\\nReturn a JSON object with these required fields: mandate_summary (string), asset_class_assessment (string), investment_manager_assessment (string), legal_structure_assessment (string), infrastructure_assessment (string), risk_rating (enum: Low | Medium | High | Decline), key_concerns (array of strings), mandate_fit_conclusion (string).` }] }], generationConfig: { temperature: 0, maxOutputTokens: 4096, responseMimeType: 'application/json' } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-cr05-fund",
+      "name": "HTTP: CR-05 Fund Mandate Risk Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        200
+      ],
+      "notes": "Calls Gemini 2.5-flash for CR-05. Response is structured JSON (responseMimeType: application/json). Output is the fund_risk_summary that feeds into CR-03. Timeout: 120s.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text;\n\nlet fundRiskSummary = null;\nif (text) {\n  try {\n    const cleaned = text.replace(/^```json\\n?|```$/gm, '').trim();\n    fundRiskSummary = JSON.parse(cleaned);\n  } catch (e) {\n    console.warn('CR-05: Could not parse Gemini response as JSON.');\n  }\n}\n\nif (!fundRiskSummary) {\n  fundRiskSummary = { raw_response: response, extraction_failed: true };\n}\n\nconst caseData = $('Postgres: Aggregate DD Inputs').first().json;\n\nreturn [{\n  json: {\n    ...caseData,\n    fund_risk_summary: fundRiskSummary,\n    cr05_raw_response: response\n  }\n}];"
+      },
+      "id": "code-extract-cr05",
+      "name": "Code: Extract CR-05 Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        200
+      ],
+      "notes": "Parses the Gemini JSON response. If extraction fails, logs a warning and continues with a fallback so the DD report is not completely blocked.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Non-fund path: pass case data through with null fund_risk_summary\nconst caseData = $input.first().json;\nreturn [{\n  json: {\n    ...caseData,\n    fund_risk_summary: null,\n    cr05_raw_response: null\n  }\n}];"
+      },
+      "id": "code-non-fund-passthrough",
+      "name": "Code: Non-Fund Passthrough",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        600
+      ],
+      "notes": "Sets fund_risk_summary to null for Individual and Corporate cases\nso downstream nodes have a consistent shape.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge fund and non-fund branches into a single item for CR-03\n// Both branches emit the same shape; just pass through.\nreturn [$input.first()];"
+      },
+      "id": "code-merge-branches",
+      "name": "Code: Merge Branches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        400
+      ],
+      "notes": "Merge point after the fund/non-fund branch. Both paths arrive here\nwith the same data shape before calling CR-03.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ systemInstruction: { parts: [{ text: \"You are a senior due diligence officer at Alpha Node, a regulated investment platform. Your task is to produce a comprehensive Due Diligence Report (CR-03) synthesising all available information about this applicant. The report will be reviewed by senior counsel and used to make an authorised Proceed, Proceed with Conditions, or Decline decision. Be thorough, objective, evidence-based, and structured. Apply AML/KYC standards and Alpha Node's fit-and-proper criteria throughout. For fund applicants, incorporate the Fund Mandate Risk Summary where provided. Output must be valid JSON only, no prose outside the JSON structure.\" }] }, contents: [{ role: 'user', parts: [{ text: `Please produce a complete Due Diligence Report for the following case.\\n\\nAPPLICANT TYPE: ${$json.applicant_type}\\nCASE ID: ${$json.case_id}\\nAPPLICANT NAME: ${$json.applicant_name}\\n\\nKYC RESULT:\\n${JSON.stringify($json.kyc_result)}\\n\\nREFERENCE ANALYSIS:\\n${JSON.stringify($json.reference_analysis)}\\n\\nRA-01 INDIVIDUAL BACKGROUND:\\n${$json.ra01_report || 'Not applicable'}\\n\\nRA-02 COMPANY RESEARCH:\\n${$json.ra02_report || 'Not applicable'}\\n\\nRA-03 FUND ASSET CLASS RESEARCH:\\n${$json.ra03_report || 'Not applicable'}\\n\\nRA-04 LEGAL COUNSEL ASSESSMENT:\\n${$json.ra04_report || 'Not applicable'}\\n\\nRA-05 INFRASTRUCTURE ASSESSMENT:\\n${$json.ra05_report || 'Not applicable'}\\n\\nRA-06 BACKGROUND CHECKS:\\n${$json.ra06_report || 'Not applicable'}\\n\\nMEETING ANALYSES:\\n${JSON.stringify($json.meeting_analyses)}\\n\\nDOCUMENTS:\\n${JSON.stringify($json.documents)}\\n\\n${$json.fund_risk_summary ? 'FUND MANDATE RISK SUMMARY (CR-05):\\n' + JSON.stringify($json.fund_risk_summary) + '\\n\\n' : ''}Return a JSON object with these required fields: executive_summary (string), risk_rating (enum: Low | Medium | High | Decline), fit_and_proper_assessment (string), fund_specific_findings (string, empty for non-fund), red_flags (array of strings), orange_flags (array of strings), outstanding_items (array of strings), recommended_decision (enum: Proceed | Proceed with Conditions | Decline), conditions (array of strings, empty unless Proceed with Conditions), rationale (string).` }] }], generationConfig: { temperature: 0, maxOutputTokens: 8192, responseMimeType: 'application/json' } }) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "http-cr03",
+      "name": "HTTP: CR-03 DD Report Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        400
+      ],
+      "notes": "Gemini 2.5-flash â€” highest-stakes output. Structured JSON enforced via responseMimeType. Estimated input: 20â€“60k tokens. Estimated output: 2â€“4k tokens. Timeout: 180s.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response.candidates?.[0]?.content?.parts?.[0]?.text;\n\nlet ddReport = null;\nif (text) {\n  try {\n    const cleaned = text.replace(/^```json\\n?|```$/gm, '').trim();\n    ddReport = JSON.parse(cleaned);\n  } catch (e) {\n    throw new Error('CR-03: Failed to parse Gemini response as JSON. Raw text: ' + text.slice(0, 500));\n  }\n}\n\nif (!ddReport) {\n  throw new Error('CR-03: No text in Gemini response. Raw response: ' + JSON.stringify(response).slice(0, 500));\n}\n\nconst caseData = $('Code: Merge Branches').first().json;\n\nconst ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);\nconst reportPath = `/Applicants/${caseData.applicant_id}/06_DD_Report/dd_report_${ts}.md`;\nconst reportJsonPath = `/Applicants/${caseData.applicant_id}/06_DD_Report/dd_report_${ts}.json`;\n\nconst riskBadge = {\n  'Low': 'ðŸŸ¢ LOW',\n  'Medium': 'ðŸŸ¡ MEDIUM',\n  'High': 'ðŸ”´ HIGH',\n  'Decline': 'â›” DECLINE'\n}[ddReport.risk_rating] || ddReport.risk_rating;\n\nconst decisionBadge = {\n  'Proceed': 'âœ… PROCEED',\n  'Proceed with Conditions': 'âš ï¸ PROCEED WITH CONDITIONS',\n  'Decline': 'âŒ DECLINE'\n}[ddReport.recommended_decision] || ddReport.recommended_decision;\n\nconst mdReport = `# Due Diligence Report\n\n**Case ID:** ${caseData.case_id}\n**Applicant:** ${caseData.applicant_name}\n**Applicant Type:** ${caseData.applicant_type}\n**Generated:** ${new Date().toISOString()}\n**Model:** gemini-2.5-flash (CR-03)\n\n---\n\n## Risk Rating: ${riskBadge}\n\n## Recommended Decision: ${decisionBadge}\n\n---\n\n## Executive Summary\n\n${ddReport.executive_summary}\n\n---\n\n## Fit and Proper Assessment\n\n${ddReport.fit_and_proper_assessment}\n\n${ddReport.fund_specific_findings ? `## Fund-Specific Findings\\n\\n${ddReport.fund_specific_findings}\\n\\n---` : ''}\n\n## Red Flags\n\n${ddReport.red_flags.length > 0 ? ddReport.red_flags.map(f => `- ${f}`).join('\\n') : '_None identified._'}\n\n## Orange Flags\n\n${ddReport.orange_flags.length > 0 ? ddReport.orange_flags.map(f => `- ${f}`).join('\\n') : '_None identified._'}\n\n## Outstanding Items\n\n${ddReport.outstanding_items.length > 0 ? ddReport.outstanding_items.map(i => `- ${i}`).join('\\n') : '_None._'}\n\n${ddReport.conditions && ddReport.conditions.length > 0 ? `## Conditions\\n\\n${ddReport.conditions.map((c, i) => `${i+1}. ${c}`).join('\\n')}\\n\\n---` : ''}\n\n## Rationale\n\n${ddReport.rationale}\n\n---\n\n_This report was generated automatically by Alpha Node's DD AI system. It must be reviewed and approved by a qualified senior officer before any decision is acted upon._\n`;\n\nreturn [{\n  json: {\n    ...caseData,\n    dd_report: ddReport,\n    cr03_raw_response: response,\n    report_markdown: mdReport,\n    report_path: reportPath,\n    report_json_path: reportJsonPath,\n    report_timestamp: ts,\n    input_token_count: response.usageMetadata?.promptTokenCount || null,\n    output_token_count: response.usageMetadata?.candidatesTokenCount || null\n  }\n}];"
+      },
+      "id": "code-extract-cr03",
+      "name": "Code: Extract & Render CR-03",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        400
+      ],
+      "notes": "Parses the CR-03 tool call, renders the structured JSON into a\nformatted markdown DD report, and builds file paths for storage.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO car_case_dd_report (\n    case_id,\n    fund_risk_summary,\n    executive_summary,\n    risk_rating,\n    fit_and_proper,\n    fund_specific_findings,\n    red_flags,\n    orange_flags,\n    outstanding_items,\n    recommended_decision,\n    conditions,\n    rationale,\n    cr03_raw_response,\n    cr05_raw_response,\n    report_md_path,\n    report_json_path,\n    model_used,\n    input_token_count,\n    output_token_count\n) VALUES (\n    '{{ $json.case_id }}',\n    {{ $json.fund_risk_summary ? JSON.stringify($json.fund_risk_summary) + '::jsonb' : 'NULL' }},\n    '{{ $json.dd_report.executive_summary.replace(/'/g, \"''\") }}',\n    '{{ $json.dd_report.risk_rating }}',\n    '{{ $json.dd_report.fit_and_proper_assessment.replace(/'/g, \"''\") }}',\n    {{ $json.dd_report.fund_specific_findings ? `'${$json.dd_report.fund_specific_findings.replace(/'/g, \"''\")}' ` : 'NULL' }},\n    '{{ JSON.stringify($json.dd_report.red_flags) }}'::jsonb,\n    '{{ JSON.stringify($json.dd_report.orange_flags) }}'::jsonb,\n    '{{ JSON.stringify($json.dd_report.outstanding_items) }}'::jsonb,\n    '{{ $json.dd_report.recommended_decision }}',\n    '{{ JSON.stringify($json.dd_report.conditions || []) }}'::jsonb,\n    '{{ $json.dd_report.rationale.replace(/'/g, \"''\") }}',\n    '{{ JSON.stringify($json.cr03_raw_response) }}'::jsonb,\n    {{ $json.cr05_raw_response ? `'${JSON.stringify($json.cr05_raw_response)}'::jsonb` : 'NULL' }},\n    '{{ $json.report_path }}',\n    '{{ $json.report_json_path }}',\n    'gemini-2.5-flash',\n    {{ $json.input_token_count || 'NULL' }},\n    {{ $json.output_token_count || 'NULL' }}\n)\nRETURNING report_id;",
+        "options": {}
+      },
+      "id": "postgres-save-report",
+      "name": "Postgres: Save DD Report",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2000,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Persists the structured DD report to case_dd_report table.\nreport_id is returned for use in downstream nodes.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://graph.microsoft.com/v1.0/drives/{{ $env.SHAREPOINT_DRIVE_ID }}/root:/Compliance/DD Reports/={{ $('Code: Extract & Render CR-03').item.json.report_path.split('/').pop() }}:/content",
+        "authentication": "genericCredentialType",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $('Code: Extract & Render CR-03').item.json.report_markdown }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "oAuth2Api"
+      },
+      "id": "storage-save-md",
+      "name": "Storage: Save Report Markdown",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        300
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Save the rendered markdown DD report to file storage.\nPath: /Applicants/{applicant_id}/06_DD_Report/dd_report_{ts}.md\nSwitch to your actual storage node type (S3 / local / SharePoint) as needed.\n\nSharePoint via Graph API. Replace SHAREPOINT_SITE_ID in URL and PLACEHOLDER_GRAPH_CRED_ID with real credential.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://graph.microsoft.com/v1.0/drives/{{ $env.SHAREPOINT_DRIVE_ID }}/root:/Compliance/DD Reports/={{ $('Code: Extract & Render CR-03').item.json.report_json_path.split('/').pop() }}:/content",
+        "authentication": "genericCredentialType",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify($('Code: Extract & Render CR-03').item.json.dd_report, null, 2) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "oAuth2Api"
+      },
+      "id": "storage-save-json",
+      "name": "Storage: Save Report JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        500
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Save raw structured JSON alongside the markdown for programmatic\naccess by downstream workflows (CR-04, WF-08).\n\nSharePoint via Graph API. Replace SHAREPOINT_SITE_ID in URL and PLACEHOLDER_GRAPH_CRED_ID with real credential.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:417a81363c604f08801f073b0ea6e3b8@thread.v2",
+          "mode": "list",
+          "cachedResultName": "CAR Assessment Automation (group)"
+        },
+        "contentType": "html",
+        "message": "={{ \n  const r = $('Code: Extract & Render CR-03').item.json.dd_report;\n  const c = $('Code: Extract & Render CR-03').item.json;\n  const riskColour = { Low: ':large_green_circle:', Medium: ':large_yellow_circle:', High: ':red_circle:', Decline: ':no_entry:' }[r.risk_rating] || '';\n  return `*Due Diligence Report Ready for Review*\\n\\n*Case:* ${c.case_id}\\n*Applicant:* ${c.applicant_name} (${c.applicant_type})\\n\\n${riskColour} *Risk Rating: ${r.risk_rating}*\\n*AI Recommended Decision: ${r.recommended_decision}*\\n\\n*Summary:* ${r.executive_summary.slice(0, 400)}${r.executive_summary.length > 400 ? '...' : ''}\\n\\n*Red Flags (${r.red_flags.length}):* ${r.red_flags.length > 0 ? r.red_flags.slice(0, 3).map(f => 'â€¢ ' + f).join('\\n') : 'None'}\\n\\n<${c.report_path}|View Full DD Report>`;\n}}",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "slack-send-and-wait",
+      "name": "Teams: Send and Wait for Approval",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        400
+      ],
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Sends DD report summary to #alphanode-senior-counsel with four buttons:\nProceed | Proceed with Conditions | Decline | Request More Info.\nWorkflow is suspended until a senior staff member clicks a button.\nSlack must have the interactive components URL configured to n8n webhook.\nSLA chase: if no response after 5 business days, a separate cron triggers a chase Slack message.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the Slack approval response to determine which button was clicked\nconst slackResponse = $input.first().json;\n\n// n8n Slack Send and Wait returns the button value in data.value or action.value\nconst decision = slackResponse?.data?.value \n  || slackResponse?.action?.value \n  || slackResponse?.value \n  || 'unknown';\n\nconst approvedBy = slackResponse?.data?.user?.name \n  || slackResponse?.user?.name \n  || slackResponse?.approved_by \n  || 'unknown';\n\nconsole.log('WF-07-C: Slack decision received:', decision, 'by', approvedBy);\n\nconst caseData = $('Code: Extract & Render CR-03').item.json;\n\nreturn [{\n  json: {\n    ...caseData,\n    slack_decision: decision,\n    decision_made_by: approvedBy,\n    decision_made_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-parse-decision",
+      "name": "Code: Parse Slack Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2660,
+        400
+      ],
+      "notes": "Normalises the Slack button callback into a decision string.\nExpected values: 'true' (Proceed), 'false' (Decline),\n'more_info', 'proceed_with_conditions'.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-proceed",
+              "leftValue": "={{ $json.slack_decision }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-proceed",
+      "name": "IF: Decision = Proceed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        400
+      ],
+      "notes": "TRUE: Proceed (or Proceed with Conditions â€” handled by checking\nproceed_with_conditions value in downstream branches).\nFALSE: Decline or Request More Info â€” routed to separate branches.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-more-info",
+              "leftValue": "={{ $json.slack_decision }}",
+              "rightValue": "more_info",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-more-info",
+      "name": "IF: Decision = More Info?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        580
+      ],
+      "notes": "Distinguishes More Info from Decline on the FALSE branch of IF: Proceed.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_cases\n   SET status = 'dd_approved',\n       dd_approved_at = NOW(),\n       dd_approved_by = '{{ $json.decision_made_by }}'\n WHERE case_id = '{{ $json.case_id }}';\n\nUPDATE car_case_gate_inputs\n   SET decision = CASE\n         WHEN '{{ $json.slack_decision }}' = 'proceed_with_conditions' THEN 'proceed_with_conditions'::car_dd_decision\n         ELSE 'proceed'::car_dd_decision\n       END,\n       decision_made_at = NOW(),\n       decision_made_by = '{{ $json.decision_made_by }}'\n WHERE case_id = '{{ $json.case_id }}';\n\nSELECT '{{ $json.case_id }}'::bigint AS case_id, NOW() AS approved_at;",
+        "options": {}
+      },
+      "id": "postgres-approve",
+      "name": "Postgres: Update Status to Approved",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3100,
+        300
+      ],
+      "notes": "STATUS TRANSITION — sets car_cases.status='dd_approved' after the DD report and any required staff review concluded with approval. Hands off to WF-08 (engagement letter).",
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "fields": {
+          "values": [
+            {
+              "name": "case_id",
+              "stringValue": "={{ $('Code: Parse Slack Decision').item.json.case_id }}"
+            },
+            {
+              "name": "decision",
+              "stringValue": "={{ $('Code: Parse Slack Decision').item.json.slack_decision }}"
+            },
+            {
+              "name": "approved_by",
+              "stringValue": "={{ $('Code: Parse Slack Decision').item.json.decision_made_by }}"
+            }
+          ]
+        }
+      },
+      "id": "execute-wf08",
+      "name": "Execute: WF-08 Engagement Letter",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        300
+      ],
+      "notes": "Fire-and-forget trigger for WF-08 (Engagement Letter generation).\nReplace WF-08-ENGAGEMENT-LETTER with actual n8n workflow ID after import.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_cases\n   SET status = 'declined',\n       dd_declined_at = NOW(),\n       dd_declined_by = '{{ $json.decision_made_by }}'\n WHERE case_id = '{{ $json.case_id }}';\n\nUPDATE car_case_gate_inputs\n   SET decision = 'decline'::car_dd_decision,\n       decision_made_at = NOW(),\n       decision_made_by = '{{ $json.decision_made_by }}'\n WHERE case_id = '{{ $json.case_id }}';\n\nSELECT '{{ $json.case_id }}'::bigint AS case_id;",
+        "options": {}
+      },
+      "id": "postgres-decline",
+      "name": "Postgres: Update Status to Declined",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3320,
+        580
+      ],
+      "notes": "STATUS TRANSITION — sets car_cases.status='declined' when DD comes back negative. Terminal state for this branch; no downstream workflow triggers.",
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "subject": "Alpha Node â€” Your Application Update",
+        "bodyContent": "<p>Dear {{ $('Code: Parse Slack Decision').item.json.applicant_name }},</p>\n<p>Thank you for your application to Alpha Node. After careful consideration, we regret to inform you that we are unable to proceed with your application at this time.</p>\n<p>If you have any questions, please contact your relationship manager.</p>\n<p>Yours sincerely,<br>Alpha Node Team</p>",
+        "bodyContentType": "html",
+        "toRecipients": "={{ $('Code: Parse Slack Decision').item.json.applicant_email }}",
+        "additionalFields": {
+          "ccRecipients": "",
+          "bccRecipients": ""
+        }
+      },
+      "id": "email-decline",
+      "name": "Email: Send Decline Notification",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        3540,
+        580
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Decline email is deliberately opaque â€” does not state specific reasons\nunless cleared by counsel (per PLAN.md open question).",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Reset gate_triggered_at to allow re-firing once the applicant\n-- provides the requested information\nUPDATE car_case_gate_inputs\n   SET gate_triggered_at = NULL,\n       decision = 'more_info_requested'::car_dd_decision,\n       decision_made_at = NOW(),\n       decision_made_by = '{{ $json.decision_made_by }}'\n WHERE case_id = '{{ $json.case_id }}';\n\nSELECT case_id FROM car_case_gate_inputs WHERE case_id = '{{ $json.case_id }}';",
+        "options": {}
+      },
+      "id": "postgres-more-info",
+      "name": "Postgres: Reset Gate for More Info",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3320,
+        760
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Resets gate_triggered_at to NULL so the gate can re-fire once\nthe outstanding items are provided and their _ready flags are re-set.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "subject": "Alpha Node â€” Additional Information Required",
+        "bodyContent": "<p>Dear {{ $('Code: Parse Slack Decision').item.json.applicant_name }},</p>\n<p>Thank you for your application. In order to progress your case, we require the following additional information:</p>\n<ul>\n{{ $('Code: Parse Slack Decision').item.json.dd_report?.outstanding_items?.map(i => `<li>${i}</li>`).join('\\n') }}\n</ul>\n<p>Please provide the above at your earliest convenience. Your relationship manager will be in touch to coordinate.</p>\n<p>Yours sincerely,<br>Alpha Node Team</p>",
+        "bodyContentType": "html",
+        "toRecipients": "={{ $('Code: Parse Slack Decision').item.json.applicant_email }}",
+        "additionalFields": {
+          "ccRecipients": "",
+          "bccRecipients": ""
+        }
+      },
+      "id": "email-more-info",
+      "name": "Email: Request More Info from Applicant",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        3540,
+        760
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Sends the list of outstanding items from the DD report to the applicant.\nPopulates from dd_report.outstanding_items.",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Aggregate DD Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Aggregate DD Inputs": {
+      "main": [
+        [
+          {
+            "node": "IF: applicant_type = Fund?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: applicant_type = Fund?": {
+      "main": [
+        [
+          {
+            "node": "HTTP: CR-05 Fund Mandate Risk Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Non-Fund Passthrough",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: CR-05 Fund Mandate Risk Summary": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract CR-05 Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract CR-05 Result": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Non-Fund Passthrough": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Merge Branches": {
+      "main": [
+        [
+          {
+            "node": "HTTP: CR-03 DD Report Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: CR-03 DD Report Generation": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract & Render CR-03",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract & Render CR-03": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Save DD Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Save DD Report": {
+      "main": [
+        [
+          {
+            "node": "Storage: Save Report Markdown",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Storage: Save Report JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storage: Save Report Markdown": {
+      "main": [
+        [
+          {
+            "node": "Teams: Send and Wait for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storage: Save Report JSON": {
+      "main": [
+        [
+          {
+            "node": "Teams: Send and Wait for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Teams: Send and Wait for Approval": {
+      "main": [
+        [
+          {
+            "node": "Code: Parse Slack Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Parse Slack Decision": {
+      "main": [
+        [
+          {
+            "node": "IF: Decision = Proceed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Decision = Proceed?": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Update Status to Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Decision = More Info?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Update Status to Approved": {
+      "main": [
+        [
+          {
+            "node": "Execute: WF-08 Engagement Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Decision = More Info?": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Reset Gate for More Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres: Update Status to Declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Update Status to Declined": {
+      "main": [
+        [
+          {
+            "node": "Email: Send Decline Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Reset Gate for More Info": {
+      "main": [
+        [
+          {
+            "node": "Email: Request More Info from Applicant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  }
+}

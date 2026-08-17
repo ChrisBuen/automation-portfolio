@@ -1,0 +1,39 @@
+{
+  "name": "chrisbuen-automation-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "npm run assets && astro dev",
+    "evidence": "node scripts/sync-publication-evidence.mjs",
+    "assets": "node scripts/sync-public-assets.mjs",
+    "build": "npm run assets && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "qa:visual": "node scripts/visual-check.mjs",
+    "qa:lighthouse": "node scripts/lighthouse-check.mjs",
+    "validate:public": "node scripts/validate-public.mjs",
+    "validate:repo": "node scripts/validate-repository.mjs",
+    "validate:variants": "node scripts/verify-build-variants.mjs",
+    "validate": "npm run check && npm run build && npm run validate:public && npm run validate:variants && npm run validate:public",
+    "release:ready": "npm run validate && npm run validate:repo"
+  },
+  "dependencies": {
+    "@fontsource-variable/instrument-sans": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "astro": "7.2.2",
+    "gsap": "3.15.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "axe-core": "4.13.0",
+    "lighthouse": "13.4.1",
+    "pdfjs-dist": "6.2.108",
+    "playwright-core": "1.62.1",
+    "sharp": "0.35.3",
+    "typescript": "^5.9.2"
+  }
+}

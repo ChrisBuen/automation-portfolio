@@ -1,0 +1,630 @@
+{
+  "name": "WF-03b Batch Document Check",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "case_id",
+              "type": "number"
+            },
+            {
+              "name": "applicant_id",
+              "type": "string"
+            },
+            {
+              "name": "source_drive_id",
+              "type": "string"
+            },
+            {
+              "name": "folder_root_id",
+              "type": "string"
+            },
+            {
+              "name": "folder_item_id",
+              "type": "string"
+            },
+            {
+              "name": "folder_path",
+              "type": "string"
+            },
+            {
+              "name": "upload_subfolder",
+              "type": "string"
+            },
+            {
+              "name": "files_json",
+              "type": "string"
+            },
+            {
+              "name": "source",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "aac72e89-1751-5f91-a571-1f5db92afd11",
+      "name": "Batch Document Check Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        400
+      ],
+      "notes": "MANUAL/BATCH ENTRY POINT - run after the applicant has finished uploading. Accepts case_id plus either files_json or a SharePoint folder reference, then processes the whole batch.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT case_id, applicant_id, primary_contact_name, primary_contact_email, folder_root_id\nFROM car_cases\nWHERE case_id = $1\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}"
+        }
+      },
+      "id": "62bbf1ba-3ad5-516b-8926-4c3f4a8753d0",
+      "name": "Postgres: Load Case For Batch",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        320,
+        400
+      ],
+      "notes": "CASE LOOKUP - loads contact details and folder_root_id so the manual batch can run from only a case_id when needed.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const caseRow = $input.first().json;\nconst trigger = $('Batch Document Check Trigger').first().json;\nlet files = [];\n\nif (trigger.files_json) {\n  const parsed = typeof trigger.files_json === 'string' ? JSON.parse(trigger.files_json) : trigger.files_json;\n  files = Array.isArray(parsed) ? parsed : (parsed.files || []);\n}\n\nconst uploadSubfolder = trigger.upload_subfolder || '02_Identity_Documents';\nreturn [{\n  json: {\n    case_id: Number(trigger.case_id || caseRow.case_id),\n    applicant_id: trigger.applicant_id || caseRow.applicant_id,\n    primary_contact_name: caseRow.primary_contact_name,\n    primary_contact_email: caseRow.primary_contact_email,\n    folder_root_id: trigger.folder_root_id || caseRow.folder_root_id,\n    source_drive_id: trigger.source_drive_id || $env.SHAREPOINT_DRIVE_ID,\n    folder_item_id: trigger.folder_item_id || '',\n    folder_path: trigger.folder_path || '',\n    upload_subfolder: uploadSubfolder,\n    source: trigger.source || 'manual_batch',\n    files,\n    has_provided_files: files.length > 0\n  }\n}];"
+      },
+      "id": "deed0f40-9927-5fcb-899e-b900b7617ac3",
+      "name": "Prepare Batch Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        400
+      ],
+      "notes": "BATCH NORMALISER - combines trigger fields with case data and decides whether to process an explicit file list or list the SharePoint upload folder.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-files",
+              "leftValue": "={{ $json.has_provided_files }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "b8f2f9bd-909e-5f0c-b4b7-fc9f31afaa32",
+      "name": "IF: Files Provided?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        800,
+        400
+      ],
+      "notes": "ROUTING GATE - TRUE uses files_json supplied by a dashboard/upload service. FALSE lists the applicant SharePoint upload folder.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const req = $input.first().json;\nreturn req.files.map(f => ({\n  json: {\n    case_id: req.case_id,\n    applicant_id: req.applicant_id,\n    file_id: f.file_id || f.id,\n    file_name: f.file_name || f.name,\n    file_mime_type: f.file_mime_type || f.mimeType || f.file?.mimeType || 'application/octet-stream',\n    file_size: Number(f.file_size || f.size || 0),\n    source_drive_id: req.source_drive_id,\n    source: req.source\n  }\n})).filter(i => i.json.file_id && i.json.file_name);"
+      },
+      "id": "c065fb03-0860-5b4c-8c2c-062ab046d881",
+      "name": "Expand Provided Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        280
+      ],
+      "notes": "FILE EXPANSION - turns the provided files_json array into one n8n item per uploaded file for DB processing.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.folder_item_id ? 'https://graph.microsoft.com/v1.0/drives/' + $json.source_drive_id + '/items/' + $json.folder_item_id + '/children?$top=200' : ($json.folder_path ? 'https://graph.microsoft.com/v1.0/drives/' + $json.source_drive_id + '/root:/' + encodeURI($json.folder_path) + ':/children?$top=200' : 'https://graph.microsoft.com/v1.0/drives/' + $json.source_drive_id + '/items/' + $json.folder_root_id + ':/' + encodeURI($json.upload_subfolder) + ':/children?$top=200') }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {
+          "retryOnFail": true,
+          "maxTries": 3,
+          "waitBetweenTries": 2000
+        }
+      },
+      "id": "77bd79ec-360d-5bbb-a058-6d08b6b48842",
+      "name": "SharePoint: List Upload Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        520
+      ],
+      "notes": "SHAREPOINT LIST - lists files in the applicant upload directory when the batch is manually triggered without an explicit files_json payload.",
+      "notesInFlow": true,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const req = $('Prepare Batch Request').first().json;\nconst listed = $input.first().json.value || [];\nreturn listed\n  .filter(f => f.file && !f.deleted)\n  .map(f => ({\n    json: {\n      case_id: req.case_id,\n      applicant_id: req.applicant_id,\n      file_id: f.id,\n      file_name: f.name,\n      file_mime_type: f.file?.mimeType || 'application/octet-stream',\n      file_size: Number(f.size || 0),\n      source_drive_id: req.source_drive_id,\n      source: 'sharepoint_folder'\n    }\n  }));"
+      },
+      "id": "f9e8b3a4-9cde-53fb-b794-5b04d29a8f21",
+      "name": "Expand Listed Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        520
+      ],
+      "notes": "FILE EXPANSION - filters the SharePoint directory listing to real files and maps Graph metadata into the batch processor shape.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const inputItems = $input.all();\nconst rows = inputItems.map(i => i.json);\n\nfunction classify(d) {\n  const nameLower = (d.file_name || '').toLowerCase();\n  const ext = nameLower.split('.').pop();\n  let category = 'other';\n  let docType = 'other';\n  let confidence = 'low';\n\n  const rules = [\n    [/proof.*address|utility|bank.statement/, 'identity', 'proof_of_address', 'high'],\n    [/passport|driver.?licen|licence|id.card/, 'identity', 'photo_id', 'high'],\n    [/qualif|certificate|rg146|degree|diploma/, 'cv', 'qualifications', 'high'],\n    [/cv|resume|curriculum/, 'cv', 'cv_resume', 'high'],\n    [/reference|referee/, 'reference', 'reference_contact', 'medium'],\n    [/trust[._ -]?deed|constitution/, 'fund', 'trust_deed', 'high'],\n    [/custodian/, 'fund', 'custodian_details', 'high'],\n    [/administrator/, 'fund', 'fund_administrator', 'high'],\n    [/auditor/, 'fund', 'auditor_details', 'high'],\n    [/service[._ -]?provider|term[._ -]?sheet/, 'fund', 'service_provider_terms', 'medium'],\n    [/structure|organi[sz]ational|chart/, 'fund', 'structure_chart', 'medium'],\n    [/insurance|\\bpi\\b|cyber/, 'legal', 'insurance_details', 'medium'],\n    [/tax/, 'legal', 'tax_advice', 'medium'],\n    [/legal|advice|solicitor/, 'legal', 'legal_advice', 'medium'],\n    [/financial|audit|accounts/, 'financial', 'audited_financials', 'medium'],\n    [/memorandum|\\bim\\b/, 'fund', 'information_memorandum', 'medium'],\n    [/mandate|strategy/, 'fund', 'investment_mandate', 'medium'],\n    [/application|car|authori[sz]ed.representative/, 'corporate', 'ar_car_application_form', 'medium'],\n    [/company.extract|asic|shareholder|director/, 'corporate', 'company_extract', 'medium']\n  ];\n\n  for (const [pattern, cat, type, conf] of rules) {\n    if (pattern.test(nameLower)) {\n      category = cat;\n      docType = type;\n      confidence = conf;\n      break;\n    }\n  }\n\n  if (category === 'other' && ['jpg', 'jpeg', 'png', 'heic'].includes(ext)) {\n    category = 'identity';\n    docType = 'photo_id';\n    confidence = 'low';\n  }\n\n  const subfolderMap = {\n    identity: '02_Identity_Documents',\n    cv: '02_Identity_Documents/CV',\n    reference: '04_References',\n    fund: '06_DD_Report/Fund_Documents',\n    legal: '06_DD_Report/Legal_Advice',\n    financial: '02_Identity_Documents',\n    corporate: '02_Identity_Documents',\n    other: '09_Correspondence'\n  };\n\n  return {\n    ...d,\n    final_doc_type: docType,\n    final_category: category,\n    target_subfolder: subfolderMap[category] || '09_Correspondence',\n    classified_by: 'rule',\n    classification_confidence: confidence\n  };\n}\n\nreturn rows.map(r => ({ json: classify(r) }));"
+      },
+      "id": "1c33a54c-d808-5e42-9fd9-fbf01d16ee8f",
+      "name": "Classify Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        400
+      ],
+      "notes": "BATCH CLASSIFIER - classifies every uploaded filename locally. No applicant email is sent here; this only prepares DB updates.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH input AS (\n  SELECT\n    $1::bigint AS case_id,\n    $2::text AS final_doc_type,\n    $3::text AS final_category,\n    $4::text AS file_name,\n    $5::text AS file_id,\n    $6::text AS file_mime_type,\n    $7::bigint AS file_size,\n    $8::text AS target_subfolder,\n    $9::text AS classified_by,\n    $10::text AS source,\n    $11::text AS classification_confidence\n), existing AS (\n  SELECT d.id\n  FROM car_case_documents d, input i\n  WHERE d.case_id = i.case_id\n    AND d.file_id = i.file_id\n    AND d.status = 'received'\n  LIMIT 1\n), matched AS (\n  SELECT d.id\n  FROM car_case_documents d, input i\n  WHERE d.case_id = i.case_id\n    AND d.status = 'pending'\n    AND (d.doc_type = i.final_doc_type OR d.category = i.final_category)\n    AND NOT EXISTS (SELECT 1 FROM existing)\n  ORDER BY CASE WHEN d.doc_type = i.final_doc_type THEN 0 ELSE 1 END, d.id\n  LIMIT 1\n), updated AS (\n  UPDATE car_case_documents d\n  SET status = 'received',\n      file_name = i.file_name,\n      file_id = i.file_id,\n      metadata = jsonb_build_object(\n        'file_name', i.file_name,\n        'file_id', i.file_id,\n        'file_mime_type', i.file_mime_type,\n        'file_size', i.file_size,\n        'doc_type', i.final_doc_type,\n        'category', i.final_category,\n        'target_subfolder', i.target_subfolder,\n        'classified_by', i.classified_by,\n        'classification_confidence', i.classification_confidence,\n        'source', i.source\n      ),\n      received_at = now()\n  FROM matched m, input i\n  WHERE d.id = m.id\n  RETURNING d.id\n), unmatched_insert AS (\n  INSERT INTO car_unmatched_uploads (case_id, file_name, file_id, file_mime_type, classified_as, source, logged_at)\n  SELECT i.case_id, i.file_name, i.file_id, i.file_mime_type, i.final_doc_type, i.source, now()\n  FROM input i\n  WHERE NOT EXISTS (SELECT 1 FROM updated)\n    AND NOT EXISTS (SELECT 1 FROM existing)\n    AND NOT EXISTS (\n      SELECT 1 FROM car_unmatched_uploads u\n      WHERE u.case_id = i.case_id\n        AND COALESCE(u.file_id, '') = COALESCE(i.file_id, '')\n    )\n  RETURNING id\n)\nSELECT\n  i.case_id,\n  i.final_doc_type,\n  i.final_category,\n  i.file_name,\n  i.file_id,\n  i.file_mime_type,\n  i.file_size,\n  i.source,\n  (SELECT id FROM updated LIMIT 1) AS matched_doc_row_id,\n  (SELECT id FROM existing LIMIT 1) AS existing_doc_row_id,\n  (SELECT id FROM unmatched_insert LIMIT 1) AS unmatched_upload_id,\n  CASE\n    WHEN EXISTS (SELECT 1 FROM updated) THEN 'matched'\n    WHEN EXISTS (SELECT 1 FROM existing) THEN 'already_received'\n    WHEN EXISTS (SELECT 1 FROM unmatched_insert) THEN 'unmatched_logged'\n    ELSE 'unmatched_existing'\n  END AS process_status\nFROM input i;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},={{ $json.final_doc_type }},={{ $json.final_category }},={{ $json.file_name }},={{ $json.file_id }},={{ $json.file_mime_type }},={{ $json.file_size || 0 }},={{ $json.target_subfolder }},={{ $json.classified_by }},={{ $json.source || \"manual_batch\" }},={{ $json.classification_confidence }}"
+        }
+      },
+      "id": "854260b3-f584-5b2b-b748-05c6fec3aa7e",
+      "name": "Postgres: Record Batch File",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        400
+      ],
+      "notes": "PER-FILE DB WRITE - for each file, fills one pending checklist row, ignores already-recorded files, or logs unmatched uploads without sending an email.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst req = $('Prepare Batch Request').first().json;\nconst matched = rows.filter(r => r.process_status === 'matched');\nconst already = rows.filter(r => r.process_status === 'already_received');\nconst unmatched = rows.filter(r => r.process_status === 'unmatched_logged' || r.process_status === 'unmatched_existing');\n\nreturn [{\n  json: {\n    case_id: req.case_id,\n    applicant_id: req.applicant_id,\n    primary_contact_name: req.primary_contact_name,\n    primary_contact_email: req.primary_contact_email,\n    processed_count: rows.length,\n    matched_count: matched.length,\n    already_count: already.length,\n    unmatched_count: unmatched.length,\n    matched_files: matched.map(r => ({ file_name: r.file_name, doc_type: r.final_doc_type })),\n    already_files: already.map(r => ({ file_name: r.file_name, doc_type: r.final_doc_type })),\n    unmatched_files: unmatched.map(r => ({ file_name: r.file_name, doc_type: r.final_doc_type })),\n    batch_results: rows\n  }\n}];"
+      },
+      "id": "9995b67e-e861-5f38-a6a3-0423bf7e5867",
+      "name": "Aggregate Batch Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        400
+      ],
+      "notes": "BATCH AGGREGATION - collapses all per-file DB results into one summary item so the workflow sends only one applicant acknowledgement.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  c.case_id, c.applicant_id, c.primary_contact_name, c.primary_contact_email, c.folder_root_id,\n  COUNT(*) FILTER (WHERE d.required = true AND d.status = 'received') AS received_count,\n  COUNT(*) FILTER (WHERE d.required = true) AS required_count,\n  COALESCE(json_agg(json_build_object('label', d.label, 'doc_type', d.doc_type)) FILTER (WHERE d.required = true AND d.status = 'pending'), '[]'::json) AS outstanding\nFROM car_cases c\nLEFT JOIN car_case_documents d ON d.case_id = c.case_id\nWHERE c.case_id = $1\nGROUP BY c.case_id;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}"
+        }
+      },
+      "id": "63a508eb-ec15-5020-91b6-513ce3bc9eb0",
+      "name": "Postgres: Load Batch Summary",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2240,
+        400
+      ],
+      "notes": "POST-BATCH CASE SUMMARY - loads the updated checklist counts and outstanding rows after all files have been processed.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $input.first().json;\nconst batch = $('Aggregate Batch Results').first().json;\nconst outstanding = Array.isArray(ctx.outstanding) ? ctx.outstanding : JSON.parse(ctx.outstanding || '[]');\n\nfunction list(items, fallback) {\n  if (!items.length) return `<p>${fallback}</p>`;\n  return '<ul>' + items.map(i => `<li>${i.file_name}${i.doc_type ? ` (${i.doc_type})` : ''}</li>`).join('') + '</ul>';\n}\n\nconst outstandingHtml = outstanding.length\n  ? '<p><strong>Still outstanding:</strong></p><ul>' + outstanding.map(o => `<li>${o.label}</li>`).join('') + '</ul>'\n  : '<p><strong>All required documents are now received.</strong> We are progressing your application to the next stage.</p>';\n\nconst reviewHtml = batch.unmatched_count\n  ? `<p><strong>Files needing staff review:</strong></p>${list(batch.unmatched_files, '')}`\n  : '<p>No uploaded files require manual document-matching review.</p>';\n\nconst emailBody = `<p>Hi ${ctx.primary_contact_name},</p>\n<p>We have completed a document check for your Alpha Node application.</p>\n<p><strong>Newly recorded documents:</strong></p>\n${list(batch.matched_files, 'No new checklist documents were recorded in this check.')}\n${batch.already_count ? `<p><strong>Already on file:</strong></p>${list(batch.already_files, '')}` : ''}\n${reviewHtml}\n${outstandingHtml}\n<p>If you have questions, please reply to this email.</p>\n<p>Regards,<br>Alpha Node Team</p>`;\n\nreturn [{\n  json: {\n    case_id: ctx.case_id,\n    applicant_id: ctx.applicant_id,\n    primary_contact_name: ctx.primary_contact_name,\n    primary_contact_email: ctx.primary_contact_email,\n    outstanding_count: outstanding.length,\n    processed_count: batch.processed_count,\n    matched_count: batch.matched_count,\n    unmatched_count: batch.unmatched_count,\n    email_subject: `Alpha Node - Document check completed for ${ctx.applicant_id}`,\n    email_body: emailBody\n  }\n}];"
+      },
+      "id": "454d2d3a-065e-5947-8ef5-18f36aac21b2",
+      "name": "Build One Acknowledgement Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        400
+      ],
+      "notes": "ONE EMAIL BUILDER - builds a single consolidated acknowledgement covering the whole manual batch, including newly matched, already-on-file, unmatched, and outstanding documents.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.primary_contact_email }}",
+        "subject": "={{ $json.email_subject }}",
+        "bodyContent": "={{ $json.email_body }}",
+        "additionalFields": {}
+      },
+      "id": "c0cd2015-75a9-5dc1-a8f9-f80711e39266",
+      "name": "Outlook: Send Batch Ack Email",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        400
+      ],
+      "notes": "SINGLE APPLICANT ACKNOWLEDGEMENT - sends exactly one email after the manual batch check completes.",
+      "notesInFlow": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "all-done",
+              "leftValue": "={{ $json.outstanding_count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "504a5ea8-0e20-5190-bbbe-5dba6fc17c93",
+      "name": "IF: All Required Received?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        400
+      ],
+      "notes": "COMPLETION CHECK - TRUE when the consolidated batch leaves no required checklist items outstanding.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_cases\nSET status = 'documents_complete'\nWHERE case_id = $1 AND status = 'documents_pending'\nRETURNING case_id, applicant_id, primary_contact_email, primary_contact_name;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}"
+        }
+      },
+      "id": "ab2022c9-2588-5d90-bc68-f585aadb76c3",
+      "name": "Postgres: Mark Case documents_complete",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3200,
+        280
+      ],
+      "notes": "STATUS TRANSITION - only changes documents_pending to documents_complete once, so repeated manual batch checks do not re-fire the gate.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "transitioned",
+              "leftValue": "={{ $json.case_id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "816d5728-be99-510d-b702-9c6426bc0e07",
+      "name": "IF: Status Transitioned?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        280
+      ],
+      "notes": "IDEMPOTENCY GUARD - only sends the WF-07 documents_ready signal if this run actually transitioned the case status.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={{ $json.case_id }}",
+            "signal_name": "documents_ready"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "32b12dd2-2a6d-5e3a-820d-6aab794f49be",
+      "name": "Signal documents_ready",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        3680,
+        160
+      ],
+      "notes": "WF-07 SIGNAL - marks documents_ready after the manual batch check completes all required documents.",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Batch Document Check Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Load Case For Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Load Case For Batch": {
+      "main": [
+        [
+          {
+            "node": "Prepare Batch Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Batch Request": {
+      "main": [
+        [
+          {
+            "node": "IF: Files Provided?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Files Provided?": {
+      "main": [
+        [
+          {
+            "node": "Expand Provided Files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SharePoint: List Upload Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Provided Files": {
+      "main": [
+        [
+          {
+            "node": "Classify Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SharePoint: List Upload Folder": {
+      "main": [
+        [
+          {
+            "node": "Expand Listed Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Listed Files": {
+      "main": [
+        [
+          {
+            "node": "Classify Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Files": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Record Batch File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Record Batch File": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Batch Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Batch Results": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Load Batch Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Load Batch Summary": {
+      "main": [
+        [
+          {
+            "node": "Build One Acknowledgement Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build One Acknowledgement Email": {
+      "main": [
+        [
+          {
+            "node": "Outlook: Send Batch Ack Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outlook: Send Batch Ack Email": {
+      "main": [
+        [
+          {
+            "node": "IF: All Required Received?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: All Required Received?": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Mark Case documents_complete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Postgres: Mark Case documents_complete": {
+      "main": [
+        [
+          {
+            "node": "IF: Status Transitioned?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Status Transitioned?": {
+      "main": [
+        [
+          {
+            "node": "Signal documents_ready",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

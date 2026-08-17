@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" viewBox="0 0 1000 520">
+<rect width="100%" height="100%" fill="#f4f1ea"/>
+<text x="60" y="56" font-family="Arial" font-size="20" font-weight="700" fill="#17212b">Synthetic market index</text>
+<text x="60" y="82" font-family="Arial" font-size="13" fill="#53606c">Fictional portfolio fixture • 2026-07-01 to 2026-08-05</text>
+<line x1="100" y1="405" x2="920" y2="405" stroke="#9aa3aa"/>
+<line x1="100" y1="115" x2="100" y2="405" stroke="#9aa3aa"/>
+<polyline points="100.0,405.0 264.0,293.5 428.0,366.8 592.0,188.3 756.0,115.0 920.0,169.2" fill="none" stroke="#0f766e" stroke-width="5" stroke-linejoin="round"/>
+<text x="100" y="450" font-family="Arial" font-size="12" fill="#53606c">2026-07-01</text>
+<text x="850" y="450" font-family="Arial" font-size="12" fill="#53606c">2026-08-05</text>
+<text x="60" y="126" font-family="Arial" font-size="12" fill="#53606c">109.1</text>
+<text x="60" y="405" font-family="Arial" font-size="12" fill="#53606c">100.0</text>
+<text x="60" y="495" font-family="Arial" font-size="12" fill="#53606c">Generated from a validated CSV; no live or forecast value is represented.</text>
+</svg>

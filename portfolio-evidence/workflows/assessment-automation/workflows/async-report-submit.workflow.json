@@ -1,0 +1,260 @@
+{
+  "name": "WF-CR03A Submit",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cr03-generate",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-cr03-submit",
+      "name": "Webhook: Submit CR-03 Job",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "POST /webhook/cr03-generate  { \"case_id\": 123 }\nHeader Auth bearer token — house style for Hermes-callable endpoints.\nCreate the credential in n8n UI (Header Auth, header name 'Authorization',\nvalue 'Bearer <token>') and replace PLACEHOLDER_HERMES_BEARER_CRED_ID.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    c.case_id,\n    c.applicant_type,\n    COUNT(cm.meeting_id) FILTER (WHERE cm.analysis_json IS NOT NULL) AS meeting_count\nFROM car_cases c\nLEFT JOIN car_case_meetings cm ON cm.case_id = c.case_id\nWHERE c.case_id = {{ $json.body.case_id }}\nGROUP BY c.case_id, c.applicant_type;",
+        "options": {}
+      },
+      "id": "postgres-precheck",
+      "name": "Postgres: Precondition Check",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Confirms the case exists and, per CR-03 PLAN.md's explicit rule, that at\nleast one CR-01 meeting analysis exists when applicant_type = Individual.\nEmpty result set means case_id does not exist.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst caseId = $('Webhook: Submit CR-03 Job').first().json.body.case_id;\n\nif (!caseId) {\n  return [{ json: { ok: false, http_status: 400, error: 'case_id is required in the request body.' } }];\n}\nif (rows.length === 0) {\n  return [{ json: { ok: false, http_status: 404, error: `No case found for case_id ${caseId}.` } }];\n}\n\nconst row = rows[0].json;\nif (row.applicant_type === 'Individual' && Number(row.meeting_count) === 0) {\n  return [{\n    json: {\n      ok: false,\n      http_status: 422,\n      error: \"CR-03 cannot run: no CR-01 meeting analysis available. Ensure WF-02 has processed at least one Fireflies transcript for this case, or record a 'desktop review only' override in car_case_gate_inputs.\"\n    }\n  }];\n}\n\nreturn [{ json: { ok: true, case_id: caseId } }];"
+      },
+      "id": "code-validate",
+      "name": "Code: Validate Preconditions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-preconditions-ok",
+      "name": "IF: Preconditions OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO car_cr03_jobs (case_id, status)\nVALUES ({{ $json.case_id }}, 'queued')\nRETURNING job_id, case_id, status, created_at;",
+        "options": {}
+      },
+      "id": "postgres-create-job",
+      "name": "Postgres: Create Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1120,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "value": {
+            "job_id": "={{ $json.job_id }}",
+            "case_id": "={{ $json.case_id }}"
+          }
+        },
+        "options": {
+          "waitForSubExecution": false
+        }
+      },
+      "id": "execute-runner",
+      "name": "Execute Workflow: WF-CR03B Runner (fire-and-forget)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        300
+      ],
+      "notes": "waitForSubExecution = false so this returns immediately — that's what\nmakes the submit webhook async. Replace PLACEHOLDER_WF_CR03_RUNNER_ID with\nthe real workflow ID of WF-CR03B Runner once both are imported into n8n.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { job_id: $json.job_id, case_id: $json.case_id, status: $json.status, poll_path: `/webhook/cr03-status/${$json.job_id}` } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "respond-queued",
+      "name": "Respond: Queued",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: $json.error } }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "respond-error",
+      "name": "Respond: Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        520
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Submit CR-03 Job": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Precondition Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Precondition Check": {
+      "main": [
+        [
+          {
+            "node": "Code: Validate Preconditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Validate Preconditions": {
+      "main": [
+        [
+          {
+            "node": "IF: Preconditions OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Preconditions OK?": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Create Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Create Job": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow: WF-CR03B Runner (fire-and-forget)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow: WF-CR03B Runner (fire-and-forget)": {
+      "main": [
+        [
+          {
+            "node": "Respond: Queued",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}

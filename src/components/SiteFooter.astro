@@ -1,0 +1,20 @@
+---
+import { externalLinks } from "../data/site";
+const githubUrl = externalLinks.github;
+const bookingUrl = externalLinks.booking;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer section-shell">
+  <div>
+    <p class="section-label">ChrisBuen / AI automation builder</p>
+    <p class="footer-statement">Make the work easier to move without making the decision harder to trust.</p>
+  </div>
+  {(githubUrl || bookingUrl) && (
+    <nav aria-label="External links">
+      {githubUrl && <a href={githubUrl}>GitHub portfolio <span aria-hidden="true">↗</span></a>}
+      {bookingUrl && <a href={bookingUrl}>Book a conversation <span aria-hidden="true">↗</span></a>}
+    </nav>
+  )}
+  <p class="copyright">© {year} ChrisBuen</p>
+</footer>

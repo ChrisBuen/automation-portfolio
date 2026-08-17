@@ -1,0 +1,54 @@
+---
+import "@fontsource-variable/instrument-sans";
+import "@fontsource/ibm-plex-mono/latin-400.css";
+import "@fontsource/ibm-plex-mono/latin-500.css";
+import "../styles/global.css";
+import { externalLinks } from "../data/site";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const social = new URL(`${import.meta.env.BASE_URL}og.png`, canonical);
+const sameAs = externalLinks.github ? [externalLinks.github] : undefined;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "ChrisBuen",
+  jobTitle: "AI Automation Builder",
+  url: canonical.toString(),
+  description,
+  ...(sameAs ? { sameAs } : {}),
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#070A0B" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={social} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={social} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to portfolio</a>
+    <slot />
+  </body>
+</html>

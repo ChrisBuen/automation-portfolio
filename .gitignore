@@ -1,0 +1,20 @@
+node_modules/
+__pycache__/
+*.py[cod]
+dist/
+.astro/
+.DS_Store
+Thumbs.db
+*.log
+.qa/
+public/assets/
+public/og.png
+.env
+.env.*
+!.env.example
+
+# Local source/reference archives are never part of the public repository.
+/Portfolio Reference/
+/design-references/
+/skills/
+/scripts/recreate-flow-reference.mjs

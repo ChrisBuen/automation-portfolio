@@ -1,0 +1,263 @@
+{
+  "name": "WF-RA Research Agent Completion Receiver",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "car-ra-completion",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "cad88d43-0416-5452-beb4-544480e97e5d",
+      "name": "RA Completion Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        80,
+        280
+      ],
+      "notes": "EXTERNAL COMPLETION ENTRY - runner/webhook endpoint for completed RA reports. Accepts case_id, agent/ra_code, report_url/report_json, status.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "case_id",
+              "type": "number"
+            },
+            {
+              "name": "agent",
+              "type": "string"
+            },
+            {
+              "name": "report_url",
+              "type": "string"
+            },
+            {
+              "name": "report_json_path",
+              "type": "string"
+            },
+            {
+              "name": "report_json",
+              "type": "string"
+            },
+            {
+              "name": "report",
+              "type": "string"
+            },
+            {
+              "name": "completed_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "da5574db-69ae-5f95-83d7-2ad512aee63e",
+      "name": "RA Completion Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        560
+      ],
+      "notes": "MCP/SUB-WORKFLOW ENTRY - structured completion receiver called by CAR Trigger MCP or internal tooling.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst body = input.body || input;\nconst caseId = Number(body.case_id);\nconst agentRaw = String(body.agent || body.ra_code || '').toUpperCase().replace('_', '-');\nif (!Number.isInteger(caseId) || caseId <= 0) throw new Error('case_id must be a positive numeric car_cases.case_id');\nif (!/^RA-0[1-6]$/.test(agentRaw)) throw new Error('agent/ra_code must be RA-01 through RA-06');\nconst signalMap = {'RA-01':'ra01_ready','RA-02':'ra02_ready','RA-03':'ra03_ready','RA-04':'ra04_ready','RA-05':'ra05_ready','RA-06':'ra06_ready'};\nconst reportJson = typeof body.report_json === 'string' ? JSON.parse(body.report_json || '{}') : (body.report_json || {});\nreturn [{ json: {\n  case_id: caseId,\n  agent: agentRaw,\n  signal_type: body.signal_type || signalMap[agentRaw],\n  status: body.status || 'complete',\n  report: body.report || body.report_markdown || body.summary || null,\n  report_url: body.report_url || body.report_md_path || body.evidence_url || null,\n  report_json_path: body.report_json_path || null,\n  report_json: reportJson,\n  completed_by: body.completed_by || body.submitted_by || 'RA Completion Receiver',\n  notes: body.notes || null\n}}];"
+      },
+      "id": "710accb6-173a-57fd-b3ad-d7182ea4503b",
+      "name": "Code: Normalize RA Completion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        420
+      ],
+      "notes": "NORMALIZER - validates case_id and RA code, maps RA code to the correct WF-07 pre-DD signal, and normalizes report fields.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO car_case_ra (case_id, agent, status, report, report_json, completed_at)\nVALUES ($1, $2, $3, $4, $5::jsonb, now())\nON CONFLICT (case_id, agent) DO UPDATE\nSET status = EXCLUDED.status,\n    report = EXCLUDED.report,\n    report_json = COALESCE(car_case_ra.report_json, '{}'::jsonb) || EXCLUDED.report_json || jsonb_build_object('report_url', $6::text, 'report_json_path', $7::text, 'completed_by', $8::text, 'completion_notes', $9::text, 'completed_at', now()),\n    completed_at = now()\nRETURNING id, case_id, agent, status, completed_at;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},={{ $json.agent }},={{ $json.status }},={{ $json.report }},={{ JSON.stringify($json.report_json || {}) }},={{ $json.report_url }},={{ $json.report_json_path }},={{ $json.completed_by }},={{ $json.notes }}"
+        }
+      },
+      "id": "2f0da601-ae9d-5794-9895-65804bf14f72",
+      "name": "Postgres: Save RA Result",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        600,
+        420
+      ],
+      "notes": "RESULT PERSISTENCE - upserts the RA result into car_case_ra, which WF-07 reads when generating the DD report.",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const payloads = $('Code: Normalize RA Completion').all();\nreturn $input.all().map((item, index) => ({ json: { ...payloads[index].json, ra_record_id: item.json.id, completed_at: item.json.completed_at } }));",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "36229ef3-52a8-51e9-a523-c38b5d7eedc4",
+      "name": "Code: Restore Completion Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        420
+      ],
+      "notes": "PAYLOAD RESTORE - re-attaches signal_type/report URL after the DB write.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={{ $json.case_id }}",
+            "signal_name": "={{ $json.signal_type }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "4f51bc4a-2bfd-5e8a-85fa-f3b9a045f85a",
+      "name": "Execute: signal_completion",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        420
+      ],
+      "notes": "GATE SIGNAL - sends raXX_ready to WF-07-A after the RA result is saved.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:417a81363c604f08801f073b0ea6e3b8@thread.v2",
+          "mode": "list",
+          "cachedResultName": "CAR Assessment Automation (group)"
+        },
+        "contentType": "html",
+        "message": "=<strong>RA completion recorded</strong><br><strong>Case:</strong> {{ $(\"Code: Restore Completion Payload\").item.json.case_id }}<br><strong>Agent:</strong> {{ $(\"Code: Restore Completion Payload\").item.json.agent }}<br><strong>Signal:</strong> <code>{{ $(\"Code: Restore Completion Payload\").item.json.signal_type }}</code><br><strong>Report:</strong> {{ $(\"Code: Restore Completion Payload\").item.json.report_url || \"not supplied\" }}",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "53b52744-0c9b-59a1-ac0c-ff68b8a4dbda",
+      "name": "Teams: RA Completion Recorded",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        420
+      ],
+      "notes": "TEAMS NOTICE - confirms the RA result was saved and the matching DD gate signal was emitted.",
+      "notesInFlow": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "RA Completion Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code: Normalize RA Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RA Completion Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code: Normalize RA Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Normalize RA Completion": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Save RA Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Save RA Result": {
+      "main": [
+        [
+          {
+            "node": "Code: Restore Completion Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Restore Completion Payload": {
+      "main": [
+        [
+          {
+            "node": "Execute: signal_completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: signal_completion": {
+      "main": [
+        [
+          {
+            "node": "Teams: RA Completion Recorded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evidence Completeness and Human-Control Assessment Gate"
+  short_description: "Check evidence, ownership, and human controls before a case progresses"
+  default_prompt: "Use $gate-assessment-evidence to check whether this case is ready for research or human review."

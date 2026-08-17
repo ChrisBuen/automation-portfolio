@@ -1,0 +1,119 @@
+{
+  "name": "WF-CR03C Status",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "cr03-status/:job_id",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-cr03-status",
+      "name": "Webhook: Poll CR-03 Job",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "GET /webhook/cr03-status/<job_id> — same bearer credential as the submit\nwebhook. Uses the same PLACEHOLDER_HERMES_BEARER_CRED_ID; replace once.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    j.job_id,\n    j.case_id,\n    j.status,\n    j.attempt,\n    j.error,\n    j.created_at,\n    j.completed_at,\n    r.report_md_path,\n    r.report_json_path,\n    r.risk_rating,\n    r.recommended_decision,\n    r.executive_summary\nFROM car_cr03_jobs j\nLEFT JOIN car_case_dd_report r ON r.report_id = j.report_id\nWHERE j.job_id = '{{ $json.params.job_id }}';",
+        "options": {}
+      },
+      "id": "postgres-job-status",
+      "name": "Postgres: Fetch Job Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nif (rows.length === 0) {\n  return [{ json: { http_status: 404, body: { ok: false, error: 'Unknown job_id.' } } }];\n}\nconst j = rows[0].json;\nconst body = {\n  ok: true,\n  job_id: j.job_id,\n  case_id: j.case_id,\n  status: j.status,\n  attempt: j.attempt,\n  created_at: j.created_at,\n  completed_at: j.completed_at\n};\nif (j.status === 'complete') {\n  body.report_md_path = j.report_md_path;\n  body.report_json_path = j.report_json_path;\n  body.risk_rating = j.risk_rating;\n  body.recommended_decision = j.recommended_decision;\n  body.executive_summary = j.executive_summary;\n}\nif (j.status === 'failed') {\n  body.error = j.error;\n}\nreturn [{ json: { http_status: 200, body } }];"
+      },
+      "id": "code-shape-response",
+      "name": "Code: Shape Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "respond-status",
+      "name": "Respond: Status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        900,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Poll CR-03 Job": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Fetch Job Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Fetch Job Status": {
+      "main": [
+        [
+          {
+            "node": "Code: Shape Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Shape Response": {
+      "main": [
+        [
+          {
+            "node": "Respond: Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}

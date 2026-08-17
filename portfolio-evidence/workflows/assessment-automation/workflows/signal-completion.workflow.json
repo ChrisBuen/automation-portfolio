@@ -1,0 +1,340 @@
+{
+  "name": "WF-07-A Signal Completion",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-signal-completion",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "Called by all upstream components (WF-04, WF-06, RA-01 through RA-06).\nExpected input: { case_id: BIGINT, signal_name: string }\nValid signal_name values: documents_ready | kyc_ready | references_ready |\n  ra01_ready | ra02_ready | ra03_ready | ra04_ready | ra05_ready | ra06_ready |\n  meetings_ready | afp_ready",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE car_case_gate_inputs\n   SET {{ $json.signal_name }} = TRUE\n WHERE case_id = '{{ $json.case_id }}'\nRETURNING case_id, {{ $json.signal_name }} AS updated_flag;",
+        "options": {}
+      },
+      "id": "postgres-set-flag",
+      "name": "Postgres: Set Signal Flag",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Dynamic column name injected from signal_name. n8n executes this via\nparametrised query pre-processing. The UPDATE returns the row so we can\nverify the write succeeded before proceeding.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    case_id,\n    documents_ready,\n    kyc_ready,\n    references_ready,\n    ra01_ready,\n    ra02_ready,\n    ra03_ready,\n    ra04_ready,\n    ra05_ready,\n    ra06_ready,\n    meetings_ready,\n    afp_ready,\n    required_inputs,\n    gate_triggered_at\nFROM car_case_gate_inputs\nWHERE case_id = '{{ $('Execute Workflow Trigger').item.json.case_id }}'",
+        "options": {}
+      },
+      "id": "postgres-read-flags",
+      "name": "Postgres: Read All Flags",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Read the full current state after the update so the Code node\nhas an accurate snapshot to evaluate.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// REDACTED_SECRET_PLACEHOLDER\n// WF-07-A: Gate Evaluation Logic\n// REDACTED_SECRET_PLACEHOLDER\n// Inputs (from Postgres: Read All Flags):\n//   item.json = {\n//     case_id, documents_ready, kyc_ready, references_ready,\n//     ra01_ready, ra02_ready, ra03_ready, ra04_ready, ra05_ready, ra06_ready,\n//     required_inputs (JSONB array of strings), gate_triggered_at\n//   }\n//\n// Output: passes item through with two extra fields:\n//   allRequiredFlagsTrue  — boolean\n//   gateAlreadyTriggered  — boolean\n// REDACTED_SECRET_PLACEHOLDER\n\nconst row = $input.first().json;\n\n// required_inputs arrives as a JS array (n8n parses JSONB automatically)\nconst requiredFlags = Array.isArray(row.required_inputs)\n  ? row.required_inputs\n  : JSON.parse(row.required_inputs || '[]');\n\nif (requiredFlags.length === 0) {\n  throw new Error(`case_id ${row.case_id}: required_inputs is empty — was Component B run at intake?`);\n}\n\n// Check every required flag is true on the current row\nconst allRequiredFlagsTrue = requiredFlags.every(flag => row[flag] === true);\n\n// gate_triggered_at is null if the gate has never fired\nconst gateAlreadyTriggered = row.gate_triggered_at !== null && row.gate_triggered_at !== undefined;\n\n// Emit diagnostic info for n8n execution log\nconsole.log(JSON.stringify({\n  case_id: row.case_id,\n  requiredFlags,\n  flagStates: requiredFlags.reduce((acc, f) => ({ ...acc, [f]: row[f] }), {}),\n  allRequiredFlagsTrue,\n  gateAlreadyTriggered\n}));\n\nreturn [{\n  json: {\n    ...row,\n    allRequiredFlagsTrue,\n    gateAlreadyTriggered\n  }\n}];"
+      },
+      "id": "code-evaluate-gate",
+      "name": "Code: Evaluate Gate Condition",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "notes": "Pure evaluation — no DB writes. Checks all required flags and whether\nthe gate has already been triggered (idempotency guard).",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-all-flags-true",
+              "leftValue": "={{ $json.allRequiredFlagsTrue }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-gate-not-triggered",
+              "leftValue": "={{ $json.gateAlreadyTriggered }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-gate-condition",
+      "name": "IF: Gate Condition Met?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ],
+      "notes": "TRUE branch: all required flags are set AND gate has not yet fired.\nFALSE branch: either condition fails — silently exit (no error).",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- SELECT FOR UPDATE serialises concurrent transactions.\n-- If two signals arrive simultaneously, one waits here while the other\n-- completes the UPDATE and COMMIT. The waiting transaction then re-reads\n-- gate_triggered_at and finds it non-NULL, so it skips the UPDATE.\nBEGIN;\n\nSELECT gate_triggered_at\nFROM car_case_gate_inputs\nWHERE case_id = '{{ $json.case_id }}'\nFOR UPDATE;\n\nUPDATE car_case_gate_inputs\n   SET gate_triggered_at = NOW()\n WHERE case_id = '{{ $json.case_id }}'\n   AND gate_triggered_at IS NULL\nRETURNING case_id, gate_triggered_at, required_inputs;\n\nCOMMIT;",
+        "options": {}
+      },
+      "id": "postgres-set-gate-triggered",
+      "name": "Postgres: Lock & Set gate_triggered_at",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        180
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Atomic lock + write. Uses SELECT FOR UPDATE so only one concurrent\ntransaction can fire the gate. The WHERE gate_triggered_at IS NULL\nclause means a race-winning second writer produces 0 rows returned,\nwhich the next IF node catches.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-row-returned",
+              "leftValue": "={{ $json.case_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-lock-won",
+      "name": "IF: Lock Won (Row Returned)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1580,
+        180
+      ],
+      "notes": "If the UPDATE returned a row, this transaction won the race and should\nfire the main gate flow. If 0 rows returned, another transaction already\nset gate_triggered_at — silently exit.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "fields": {
+          "values": [
+            {
+              "name": "case_id",
+              "stringValue": "={{ $('Execute Workflow Trigger').item.json.case_id }}"
+            }
+          ]
+        }
+      },
+      "id": "execute-wf07-main",
+      "name": "Execute: WF-07-C Main Gate Flow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        100
+      ],
+      "notes": "Fire-and-forget (waitForSubWorkflow: false) so this sub-workflow returns\nimmediately to the caller. The main gate flow runs asynchronously.\nReplace WF-07-C-DD-GATE-MAIN with the actual n8n workflow ID after import.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gate already triggered or race condition lost — silently do nothing.\n// Log for diagnostics only.\nconsole.log('WF-07-A: Gate not fired for case', $input.first().json.case_id, '— condition not met or already triggered.');\nreturn [];"
+      },
+      "id": "code-noop",
+      "name": "Code: No-Op (Gate Not Met)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        440
+      ],
+      "notes": "Silent exit. Logs the case_id for debugging. Returns empty array\nso n8n shows 0 items and no error.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Race condition: lock was obtained but another transaction already\n// set gate_triggered_at before ours. Silent exit.\nconsole.log('WF-07-A: Lost race condition lock for case', $input.first().json.case_id, '— gate already fired by concurrent transaction.');\nreturn [];"
+      },
+      "id": "code-race-noop",
+      "name": "Code: No-Op (Race Lost)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        280
+      ],
+      "notes": "Handles the case where SELECT FOR UPDATE was obtained but the conditional\nUPDATE affected 0 rows (gate_triggered_at was already set by a concurrent\ntransaction that committed first).",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Set Signal Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Set Signal Flag": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Read All Flags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Read All Flags": {
+      "main": [
+        [
+          {
+            "node": "Code: Evaluate Gate Condition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Evaluate Gate Condition": {
+      "main": [
+        [
+          {
+            "node": "IF: Gate Condition Met?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Gate Condition Met?": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Lock & Set gate_triggered_at",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: No-Op (Gate Not Met)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Lock & Set gate_triggered_at": {
+      "main": [
+        [
+          {
+            "node": "IF: Lock Won (Row Returned)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Lock Won (Row Returned)?": {
+      "main": [
+        [
+          {
+            "node": "Execute: WF-07-C Main Gate Flow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: No-Op (Race Lost)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  }
+}

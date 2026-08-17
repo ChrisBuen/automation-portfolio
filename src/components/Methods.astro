@@ -1,0 +1,77 @@
+---
+import { externalLinks } from "../data/site";
+
+interface Method {
+  slug: string;
+  title: string;
+  technicalTitle: string;
+  purpose: string;
+  trigger: string;
+  controlBoundary: string;
+  outcome: string;
+  projectSlugs: string[];
+  evidencePath: string;
+}
+
+interface Props {
+  methods: Method[];
+}
+
+const { methods } = Astro.props;
+const methodSourceHref = (sourcePath: string) => {
+  if (!externalLinks.github) return undefined;
+  return `${externalLinks.github}/blob/main/${sourcePath.split("/").map(encodeURIComponent).join("/")}`;
+};
+const projectNames: Record<string, string> = {
+  onboarding: "Onboarding",
+  "advice-documents": "Advice documents",
+  "research-reports": "Research reports",
+  "content-seo": "Content and SEO",
+  "market-intelligence": "Market intelligence",
+};
+---
+
+<section class="methods section-shell" id="methods" aria-labelledby="methods-title">
+  <div class="section-heading reveal-copy">
+    <div>
+      <p class="section-label">Reusable methods / agent skill packages</p>
+      <h2 id="methods-title">Ways I can approach the next system.</h2>
+    </div>
+    <p>These are not five more products. They are the coordination, evidence, evaluation, decision, and presentation methods I can adapt to a new client's work.</p>
+  </div>
+  <div class="method-list">
+    {methods.map((method, index) => (
+      <details class="method" id={method.slug}>
+        <summary>
+          <span class="method-index">{String(index + 1).padStart(2, "0")}</span>
+          <span class="method-title">{method.title}</span>
+          <span class="method-control" aria-hidden="true">+</span>
+        </summary>
+        <div class="method-body">
+          <div>
+            <span class="section-label">Technical package</span>
+            <p class="technical-title">{method.technicalTitle}</p>
+            <p>{method.purpose}</p>
+            <span class="section-label method-trigger-label">Trigger</span>
+            <p>{method.trigger}</p>
+          </div>
+          <div>
+            <span class="section-label">Control boundary</span>
+            <p>{method.controlBoundary}</p>
+            <span class="section-label method-trigger-label">Reusable outcome</span>
+            <p>{method.outcome}</p>
+            <span class="section-label method-trigger-label">Used in</span>
+            <div class="method-projects" aria-label={`${method.title} project mappings`}>
+              {method.projectSlugs.map((slug) => <a href={`#${slug}`}>{projectNames[slug]}</a>)}
+            </div>
+            {methodSourceHref(method.evidencePath) ? (
+              <a href={methodSourceHref(method.evidencePath)}>Inspect public skill source <span aria-hidden="true">↗</span></a>
+            ) : (
+              <span class="source-recorded">Public source recorded in the repository</span>
+            )}
+          </div>
+        </div>
+      </details>
+    ))}
+  </div>
+</section>

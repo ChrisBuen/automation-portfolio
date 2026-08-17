@@ -1,0 +1,590 @@
+---
+import { caseDecisionDiagrams, caseDiagrams } from "../data/assets";
+import { workflowAtlases } from "../data/workflowAtlases";
+import type { ProjectCase } from "../data/portfolio";
+
+interface Props { caseStudy: ProjectCase }
+const { caseStudy } = Astro.props;
+const atlas = workflowAtlases[caseStudy.slug];
+const systemDiagram = caseDiagrams[caseStudy.slug];
+const decisionDiagram = caseDecisionDiagrams[caseStudy.slug];
+const views = [
+  {
+    id: "system",
+    label: "System flow",
+    title: atlas.systemQuestion,
+    description: atlas.systemDescription,
+    diagram: systemDiagram,
+  },
+  {
+    id: "decisions",
+    label: "Decision + correction",
+    title: atlas.decisionQuestion,
+    description: atlas.decisionDescription,
+    diagram: decisionDiagram,
+  },
+];
+---
+
+<section class="workflow-atlas section-shell" data-workflow-atlas aria-labelledby={`${caseStudy.slug}-atlas-title`}>
+  <header class="atlas-header">
+    <div>
+      <p class="atlas-kicker">System atlas / {caseStudy.index}</p>
+      <h3 id={`${caseStudy.slug}-atlas-title`}>{caseStudy.shortTitle}</h3>
+    </div>
+    <p class="atlas-argument">{atlas.visualArgument}</p>
+  </header>
+
+  <ol class="atlas-journey" aria-label={`${caseStudy.shortTitle} journey`} tabindex="0">
+    {atlas.journey.map((step) => (
+      <li>
+        <span>{step.index}</span>
+        <div><strong>{step.title}</strong><p>{step.detail}</p></div>
+      </li>
+    ))}
+  </ol>
+
+  <div class="atlas-legend" aria-label="Diagram legend" role="region" tabindex="0">
+    <span><i data-kind="system"></i> System or documented process</span>
+    <span><i data-kind="gate"></i> Gate or human authority</span>
+    <span><i data-kind="pass"></i> Cleared handoff</span>
+    <span><i data-kind="return"></i> Hold, failure, or correction</span>
+  </div>
+
+  <div class="diagram-viewer" data-diagram-viewer>
+    <div class="diagram-toolbar">
+      <div class="diagram-tabs" role="tablist" aria-label={`${caseStudy.shortTitle} diagram views`}>
+        {views.map((view, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`${caseStudy.slug}-${view.id}-tab`}
+            aria-selected={index === 0 ? "true" : "false"}
+            aria-controls={`${caseStudy.slug}-${view.id}-panel`}
+            tabindex={index === 0 ? "0" : "-1"}
+            data-diagram-tab={view.id}
+          >
+            <span>{String(index + 1).padStart(2, "0")}</span>{view.label}
+          </button>
+        ))}
+      </div>
+      <div class="diagram-controls" aria-label="Diagram controls">
+        <button type="button" data-diagram-action="zoom-out" aria-label="Zoom out" title="Zoom out"><span aria-hidden="true">−</span></button>
+        <button type="button" data-diagram-action="zoom-in" aria-label="Zoom in" title="Zoom in"><span aria-hidden="true">+</span></button>
+        <button type="button" data-diagram-action="fit" aria-label="Fit the complete diagram" title="Fit complete diagram">Fit</button>
+        <button type="button" data-diagram-action="reset" aria-label="Show diagram at actual size" title="Actual size">1:1</button>
+        <button type="button" data-diagram-action="fullscreen" aria-label="Open diagram fullscreen" aria-pressed="false" title="Fullscreen">Full</button>
+      </div>
+    </div>
+
+    {views.map((view, index) => (
+      <section
+        id={`${caseStudy.slug}-${view.id}-panel`}
+        class="diagram-panel"
+        role="tabpanel"
+        aria-labelledby={`${caseStudy.slug}-${view.id}-tab`}
+        hidden={index !== 0}
+        data-diagram-panel={view.id}
+      >
+        <header class="diagram-panel__header">
+          <div><span>{view.label}</span><h4>{view.title}</h4></div>
+          <p>{view.description}</p>
+        </header>
+        <div
+          class="diagram-canvas"
+          tabindex="0"
+          role="group"
+          aria-label={`${view.label}. Use the toolbar or plus, minus, zero, F, and arrow keys to inspect the diagram.`}
+          data-diagram-canvas
+          data-width={view.diagram.width}
+          data-height={view.diagram.height}
+        >
+          <div class="diagram-surface" data-diagram-surface>
+            <p class="diagram-loading" aria-hidden="true">Loading source-backed schematic…</p>
+            <picture>
+              <source srcset={`${view.diagram.small} 1600w, ${view.diagram.large} 3200w`} sizes="100vw" type="image/webp" />
+              <img
+                src={view.diagram.small}
+                alt={view.diagram.alt}
+                loading={caseStudy.slug === "onboarding" && index === 0 ? "eager" : "lazy"}
+                decoding="async"
+                width={view.diagram.width}
+                height={view.diagram.height}
+                draggable="false"
+              />
+            </picture>
+          </div>
+        </div>
+        <footer class="diagram-panel__footer">
+          <p><span data-diagram-status aria-live="polite">Fit view</span> · Drag to pan after zooming. Double-click to zoom in.</p>
+          <a href={view.diagram.large} aria-label={`Open full-size ${view.label.toLowerCase()} diagram`}>Open full-size chart <span aria-hidden="true">↗</span></a>
+        </footer>
+      </section>
+    ))}
+  </div>
+</section>
+
+<script>
+  interface DiagramState {
+    scale: number;
+    fitScale: number;
+    x: number;
+    y: number;
+    dragging: boolean;
+    pointerId?: number;
+    lastX: number;
+    lastY: number;
+  }
+
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+  document.querySelectorAll<HTMLElement>("[data-workflow-atlas]").forEach((atlasElement) => {
+    if (atlasElement.dataset.enhanced === "true") return;
+    atlasElement.dataset.enhanced = "true";
+    const viewer = atlasElement.querySelector<HTMLElement>("[data-diagram-viewer]");
+    if (!viewer) return;
+
+    const tabs = [...viewer.querySelectorAll<HTMLButtonElement>("[data-diagram-tab]")];
+    const panels = [...viewer.querySelectorAll<HTMLElement>("[data-diagram-panel]")];
+    const states = new WeakMap<HTMLElement, DiagramState>();
+    let activePanel = panels[0];
+
+    const getParts = (panel: HTMLElement) => {
+      const canvas = panel.querySelector<HTMLElement>("[data-diagram-canvas]");
+      const surface = panel.querySelector<HTMLElement>("[data-diagram-surface]");
+      const status = panel.querySelector<HTMLElement>("[data-diagram-status]");
+      if (!canvas || !surface || !status) return undefined;
+      return { canvas, surface, status };
+    };
+
+    const getState = (panel: HTMLElement) => {
+      let state = states.get(panel);
+      if (!state) {
+        state = { scale: 1, fitScale: 1, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0 };
+        states.set(panel, state);
+      }
+      return state;
+    };
+
+    const apply = (panel: HTMLElement) => {
+      const parts = getParts(panel);
+      if (!parts) return;
+      const state = getState(panel);
+      const width = Number(parts.canvas.dataset.width) || 1600;
+      const height = Number(parts.canvas.dataset.height) || 856;
+      const maxX = Math.max(0, (width * state.scale - parts.canvas.clientWidth) / 2) + 48;
+      const maxY = Math.max(0, (height * state.scale - parts.canvas.clientHeight) / 2) + 48;
+      state.x = clamp(state.x, -maxX, maxX);
+      state.y = clamp(state.y, -maxY, maxY);
+      parts.surface.style.width = `${width}px`;
+      parts.surface.style.height = `${height}px`;
+      parts.surface.style.transform = `translate(-50%, -50%) translate3d(${state.x}px, ${state.y}px, 0) scale(${state.scale})`;
+      const pannable = state.scale > state.fitScale * 1.03;
+      parts.canvas.toggleAttribute("data-pannable", pannable);
+      parts.status.textContent = `${Math.round(state.scale * 100)}% view`;
+    };
+
+    const fit = (panel: HTMLElement) => {
+      const parts = getParts(panel);
+      if (!parts || parts.canvas.clientWidth === 0 || parts.canvas.clientHeight === 0) return;
+      const width = Number(parts.canvas.dataset.width) || 1600;
+      const height = Number(parts.canvas.dataset.height) || 856;
+      const state = getState(panel);
+      state.fitScale = Math.min((parts.canvas.clientWidth - 32) / width, (parts.canvas.clientHeight - 32) / height, 1);
+      state.scale = state.fitScale;
+      state.x = 0;
+      state.y = 0;
+      apply(panel);
+      parts.status.textContent = "Fit view";
+    };
+
+    const zoom = (panel: HTMLElement, factor: number) => {
+      const state = getState(panel);
+      state.scale = clamp(state.scale * factor, state.fitScale, 2.5);
+      apply(panel);
+    };
+
+    const showPanel = (id: string, focusTab = false) => {
+      tabs.forEach((tab) => {
+        const selected = tab.dataset.diagramTab === id;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        if (selected && focusTab) tab.focus();
+      });
+      panels.forEach((panel) => {
+        const selected = panel.dataset.diagramPanel === id;
+        panel.hidden = !selected;
+        if (selected) activePanel = panel;
+      });
+      requestAnimationFrame(() => fit(activePanel));
+    };
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => showPanel(tab.dataset.diagramTab ?? "system"));
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        let next = index;
+        if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+        if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+        if (event.key === "Home") next = 0;
+        if (event.key === "End") next = tabs.length - 1;
+        showPanel(tabs[next].dataset.diagramTab ?? "system", true);
+      });
+    });
+
+    viewer.querySelectorAll<HTMLButtonElement>("[data-diagram-action]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const action = button.dataset.diagramAction;
+        if (action === "zoom-in") zoom(activePanel, 1.24);
+        if (action === "zoom-out") zoom(activePanel, 1 / 1.24);
+        if (action === "fit") fit(activePanel);
+        if (action === "reset") {
+          const state = getState(activePanel);
+          state.scale = 1;
+          state.x = 0;
+          state.y = 0;
+          apply(activePanel);
+        }
+        if (action === "fullscreen") {
+          if (document.fullscreenElement === viewer) await document.exitFullscreen();
+          else await viewer.requestFullscreen();
+        }
+      });
+    });
+
+    panels.forEach((panel) => {
+      const parts = getParts(panel);
+      if (!parts) return;
+      const state = getState(panel);
+      const image = parts.surface.querySelector("img");
+      const imageReady = () => {
+        parts.surface.setAttribute("data-loaded", "true");
+        fit(panel);
+      };
+      if (image?.complete && image.naturalWidth > 0) requestAnimationFrame(imageReady);
+      else image?.addEventListener("load", imageReady, { once: true });
+
+      parts.canvas.addEventListener("dblclick", () => zoom(panel, 1.35));
+      parts.canvas.addEventListener("pointerdown", (event) => {
+        if (!parts.canvas.hasAttribute("data-pannable")) return;
+        state.dragging = true;
+        state.pointerId = event.pointerId;
+        state.lastX = event.clientX;
+        state.lastY = event.clientY;
+        parts.canvas.setPointerCapture(event.pointerId);
+        parts.canvas.setAttribute("data-dragging", "true");
+      });
+      parts.canvas.addEventListener("pointermove", (event) => {
+        if (!state.dragging || state.pointerId !== event.pointerId) return;
+        state.x += event.clientX - state.lastX;
+        state.y += event.clientY - state.lastY;
+        state.lastX = event.clientX;
+        state.lastY = event.clientY;
+        apply(panel);
+      });
+      const endDrag = (event: PointerEvent) => {
+        if (state.pointerId !== event.pointerId) return;
+        state.dragging = false;
+        state.pointerId = undefined;
+        parts.canvas.removeAttribute("data-dragging");
+      };
+      parts.canvas.addEventListener("pointerup", endDrag);
+      parts.canvas.addEventListener("pointercancel", endDrag);
+      parts.canvas.addEventListener("keydown", (event) => {
+        const step = event.shiftKey ? 72 : 34;
+        if (["+", "="].includes(event.key)) { event.preventDefault(); zoom(panel, 1.24); }
+        if (["-", "_"].includes(event.key)) { event.preventDefault(); zoom(panel, 1 / 1.24); }
+        if (event.key === "0") { event.preventDefault(); fit(panel); }
+        if (event.key.toLowerCase() === "f") { event.preventDefault(); fit(panel); }
+        if (event.key === "ArrowLeft") { event.preventDefault(); state.x += step; apply(panel); }
+        if (event.key === "ArrowRight") { event.preventDefault(); state.x -= step; apply(panel); }
+        if (event.key === "ArrowUp") { event.preventDefault(); state.y += step; apply(panel); }
+        if (event.key === "ArrowDown") { event.preventDefault(); state.y -= step; apply(panel); }
+      });
+    });
+
+    const resizeObserver = new ResizeObserver(() => fit(activePanel));
+    resizeObserver.observe(viewer);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.fullscreenElement === viewer) void document.exitFullscreen();
+    });
+    document.addEventListener("fullscreenchange", () => {
+      const fullscreen = document.fullscreenElement === viewer;
+      const button = viewer.querySelector<HTMLButtonElement>('[data-diagram-action="fullscreen"]');
+      button?.setAttribute("aria-pressed", String(fullscreen));
+      if (button) {
+        button.textContent = fullscreen ? "Exit" : "Full";
+        button.setAttribute("aria-label", fullscreen ? "Exit diagram fullscreen" : "Open diagram fullscreen");
+      }
+      requestAnimationFrame(() => fit(activePanel));
+    });
+  });
+</script>
+
+<style>
+  .workflow-atlas {
+    margin-top: clamp(4rem, 8vw, 8rem);
+    color: #17212d;
+  }
+
+  .atlas-header {
+    display: grid;
+    grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
+    gap: clamp(2rem, 7vw, 8rem);
+    align-items: end;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border: 1px solid #d7d4ca;
+    border-bottom: 0;
+    background: #f4f1e9;
+  }
+
+  .atlas-kicker,
+  .diagram-panel__header span,
+  .atlas-journey > li > span {
+    margin: 0;
+    color: #3159d9;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 500;
+    letter-spacing: 0.045em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .atlas-header h3 {
+    max-width: 16ch;
+    margin: 0.55rem 0 0;
+    font-size: clamp(2rem, 4vw, 4.4rem);
+    font-weight: 540;
+    letter-spacing: -0.05em;
+    line-height: 0.96;
+  }
+
+  .atlas-argument {
+    max-width: 70ch;
+    margin: 0;
+    color: #536170;
+    font-size: clamp(1rem, 1.35vw, 1.2rem);
+    line-height: 1.65;
+  }
+
+  .atlas-journey {
+    display: grid;
+    margin: 0;
+    padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+    border-right: 1px solid #d7d4ca;
+    border-left: 1px solid #d7d4ca;
+    background: #f4f1e9;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    list-style: none;
+  }
+
+  .atlas-journey li {
+    position: relative;
+    display: grid;
+    min-height: 10.5rem;
+    padding: 1.5rem 1.25rem 1.6rem 0;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.5rem;
+    border-top: 1px solid #d7d4ca;
+  }
+
+  .atlas-journey li:not(:last-child)::after {
+    position: absolute;
+    top: 2rem;
+    right: 0.65rem;
+    color: #3159d9;
+    content: "→";
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .atlas-journey strong { display: block; font-size: 0.9rem; line-height: 1.35; }
+  .atlas-journey p { margin: 0.55rem 0 0; color: #536170; font-size: 0.78rem; line-height: 1.5; }
+
+  .atlas-legend {
+    display: flex;
+    min-height: 3.75rem;
+    padding: 0.8rem clamp(1rem, 2.5vw, 2.5rem);
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid #d7d4ca;
+    border-top: 0;
+    background: #ece8de;
+    color: #536170;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .atlas-legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+  .atlas-legend i { width: 0.68rem; height: 0.68rem; border: 1px solid currentColor; border-radius: 0.15rem; background: #dfe7ff; }
+  .atlas-legend i[data-kind="gate"] { border-color: #d68a00; background: #ffe9b8; }
+  .atlas-legend i[data-kind="pass"] { border-color: #168d79; background: #d7f0ea; }
+  .atlas-legend i[data-kind="return"] { border-color: #d54c4c; background: #f8dddd; }
+
+  .diagram-viewer {
+    position: relative;
+    border: 1px solid #d7d4ca;
+    border-top: 0;
+    background: #f8f6ef;
+  }
+
+  .diagram-viewer:fullscreen { width: 100vw; height: 100vh; border: 0; background: #f8f6ef; }
+  .diagram-viewer:fullscreen .diagram-panel:not([hidden]) { display: grid; height: calc(100vh - 4.5rem); grid-template-rows: auto minmax(0, 1fr) auto; }
+  .diagram-viewer:fullscreen .diagram-canvas { height: auto; min-height: 0; }
+
+  .diagram-toolbar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    min-height: 4.5rem;
+    padding: 0.65rem clamp(0.75rem, 2vw, 1.5rem);
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid #d7d4ca;
+    background: #17212d;
+    color: #fff;
+  }
+
+  .diagram-tabs,
+  .diagram-controls { display: flex; align-items: center; gap: 0.45rem; }
+
+  .diagram-tabs button,
+  .diagram-controls button {
+    min-height: 44px;
+    border: 1px solid #3b4756;
+    border-radius: 0;
+    background: transparent;
+    color: #aeb8c4;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .diagram-tabs button { padding: 0.7rem 0.9rem; }
+  .diagram-tabs button span { margin-right: 0.55rem; color: #68d7c6; }
+  .diagram-tabs button[aria-selected="true"] { border-color: #68d7c6; background: #21363a; color: #fff; }
+  .diagram-controls button { min-width: 44px; padding: 0.65rem 0.72rem; }
+  .diagram-controls button span { font-size: 1.25rem; line-height: 1; }
+  .diagram-tabs button:hover,
+  .diagram-controls button:hover { border-color: #68d7c6; color: #fff; }
+  .diagram-tabs button:active,
+  .diagram-controls button:active { transform: translateY(1px); }
+
+  .diagram-panel[hidden] { display: none; }
+
+  .diagram-panel__header {
+    display: grid;
+    padding: clamp(1.4rem, 3vw, 2.4rem);
+    grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(1.5rem, 5vw, 6rem);
+    border-bottom: 1px solid #d7d4ca;
+  }
+
+  .diagram-panel__header h4 {
+    max-width: 22ch;
+    margin: 0.45rem 0 0;
+    font-size: clamp(1.35rem, 2.7vw, 2.75rem);
+    font-weight: 540;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  .diagram-panel__header p { max-width: 70ch; margin: 0; color: #647180; font-size: 0.92rem; line-height: 1.65; }
+
+  .diagram-canvas {
+    position: relative;
+    height: clamp(30rem, 52vw, 48rem);
+    overflow: hidden;
+    background-color: #f3f0e8;
+    background-image: radial-gradient(circle, rgba(23, 33, 45, 0.13) 0.7px, transparent 0.8px);
+    background-size: 18px 18px;
+    cursor: default;
+    touch-action: pan-y;
+  }
+
+  .diagram-canvas[data-pannable] { cursor: grab; touch-action: none; }
+  .diagram-canvas[data-dragging] { cursor: grabbing; }
+
+  .diagram-surface {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    overflow: hidden;
+    border: 1px solid rgba(23, 33, 45, 0.18);
+    background: #f7f4ed;
+    box-shadow: 0 1.8rem 5rem rgba(23, 33, 45, 0.16);
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  .diagram-surface picture,
+  .diagram-surface img { display: block; width: 100%; height: 100%; }
+  .diagram-surface picture { position: relative; z-index: 1; }
+  .diagram-surface img { object-fit: contain; user-select: none; }
+
+  .diagram-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    color: #536170;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.035em;
+    transform: translate(-50%, -50%);
+  }
+
+  .diagram-surface[data-loaded] .diagram-loading { display: none; }
+
+  .diagram-panel__footer {
+    display: flex;
+    min-height: 4rem;
+    padding: 0.75rem clamp(1rem, 2vw, 1.5rem);
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid #d7d4ca;
+    background: #ece8de;
+    color: #5c6976;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  .diagram-panel__footer p { margin: 0; }
+  .diagram-panel__footer a { display: inline-flex; min-height: 44px; align-items: center; color: #17212d; font-weight: 500; text-decoration: none; }
+  .diagram-panel__footer a span { margin-left: 0.35rem; color: #3159d9; }
+
+  @media (max-width: 980px) {
+    .atlas-header,
+    .diagram-panel__header { grid-template-columns: 1fr; gap: 1.2rem; }
+    .atlas-journey { overflow-x: auto; grid-template-columns: repeat(6, minmax(14rem, 1fr)); scrollbar-color: #3159d9 #e1ddd3; }
+    .atlas-journey li { min-height: 9rem; }
+    .atlas-legend { overflow-x: auto; white-space: nowrap; }
+  }
+
+  @media (max-width: 700px) {
+    .workflow-atlas { width: 100%; margin-top: 3.5rem; padding-inline: 0; }
+    .atlas-header { padding: 1.3rem var(--page-gutter); }
+    .atlas-journey { padding-inline: var(--page-gutter); }
+    .atlas-legend { padding-inline: var(--page-gutter); }
+    .diagram-toolbar { align-items: stretch; flex-direction: column; }
+    .diagram-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+    .diagram-tabs button { text-align: left; }
+    .diagram-controls { justify-content: flex-end; }
+    .diagram-panel__header { padding: 1.3rem var(--page-gutter); }
+    .diagram-canvas { height: min(68svh, 33rem); }
+    .diagram-panel__footer { align-items: flex-start; flex-direction: column; padding-inline: var(--page-gutter); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .diagram-tabs button,
+    .diagram-controls button { transition: none; }
+    .diagram-surface { will-change: auto; }
+  }
+</style>

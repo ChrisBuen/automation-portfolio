@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">ChrisBuen monogram</title>
+  <rect width="64" height="64" rx="8" fill="#070A0B"/>
+  <path d="M39.5 15.5H28.7c-8 0-13.2 5.7-13.2 16.5s5.2 16.5 13.2 16.5h10.8" fill="none" stroke="#F2EFE8" stroke-width="5" stroke-linecap="square"/>
+  <path d="M33.5 24h7.1c5.1 0 8 2.7 8 7.1 0 2.7-1.3 4.7-3.7 5.8 3 1 4.6 3.1 4.6 6.1 0 4.8-3.2 7.5-8.8 7.5h-7.2V24Z" fill="none" stroke="#6FE0CF" stroke-width="4"/>
+</svg>

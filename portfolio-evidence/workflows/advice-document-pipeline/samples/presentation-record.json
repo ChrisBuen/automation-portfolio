@@ -1,0 +1,26 @@
+{
+  "recordType": "synthetic-demonstration",
+  "client": {
+    "displayName": "Jordan Example",
+    "entityType": "individual"
+  },
+  "objectives": [
+    "Build a diversified long-term portfolio",
+    "Maintain a liquid reserve for planned expenses"
+  ],
+  "riskProfile": {
+    "grade": "Balanced",
+    "reviewRequired": true
+  },
+  "allocation": [
+    {"assetClass": "Growth", "targetPercent": 55},
+    {"assetClass": "Defensive", "targetPercent": 35},
+    {"assetClass": "Cash reserve", "targetPercent": 10}
+  ],
+  "permissions": {
+    "selfCustody": false,
+    "derivatives": false,
+    "yieldStrategies": false
+  },
+  "notice": "Fictional data for portfolio demonstration only."
+}

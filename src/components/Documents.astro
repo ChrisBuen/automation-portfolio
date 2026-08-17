@@ -1,0 +1,46 @@
+---
+import { assetProvenance, downloads, evidenceAppendix } from "../data/assets";
+import { externalLinks } from "../data/site";
+
+const githubUrl = externalLinks.github;
+---
+
+<section class="documents section-shell" id="documents" aria-labelledby="documents-title">
+  <div class="section-heading reveal-copy">
+    <div>
+      <p class="section-label">Proof you can take away</p>
+      <h2 id="documents-title">Inspect the work beyond the animation.</h2>
+    </div>
+    <p>The short brief orients quickly. The casebook and evidence appendix preserve the implementation context, boundaries, and inspection paths behind these stories.</p>
+  </div>
+  <div class="document-list">
+    {downloads.map((artifact, index) => (
+      <a class="document-row" href={artifact.href} download={artifact.filename}>
+        <span>{String(index + 1).padStart(2, "0")}</span>
+        <span>
+          <strong>{artifact.title}</strong>
+          <small>{artifact.description}</small>
+        </span>
+        <span>{artifact.type} ↓</span>
+      </a>
+    ))}
+    <a class="document-row document-row-secondary" href={evidenceAppendix.href} download={evidenceAppendix.filename}>
+      <span>03</span>
+      <span>
+        <strong>{evidenceAppendix.title}</strong>
+        <small>Supporting project evidence and inspection paths.</small>
+      </span>
+      <span>PDF ↓</span>
+    </a>
+  </div>
+  <div class="document-actions">
+    {githubUrl && <a class="button button-secondary" href={githubUrl}>Inspect the complete portfolio repository <span aria-hidden="true">↗</span></a>}
+    <details class="provenance">
+      <summary>View asset provenance</summary>
+      <ul>
+        {assetProvenance.map((asset) => <li><span>{asset.title}</span><code>allowlisted / hash recorded</code></li>)}
+        <li><span>Machine-readable manifest</span><a href={`${import.meta.env.BASE_URL}assets/provenance.json`}>Inspect JSON ↗</a></li>
+      </ul>
+    </details>
+  </div>
+</section>

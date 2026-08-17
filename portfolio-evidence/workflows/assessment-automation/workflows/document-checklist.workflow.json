@@ -1,0 +1,178 @@
+{
+  "name": "WF-03 Document Collection",
+  "nodes": [
+    {
+      "id": "wf03a-trigger",
+      "name": "Receive Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        400
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "case_id",
+              "type": "number"
+            },
+            {
+              "name": "applicant_id",
+              "type": "string"
+            },
+            {
+              "name": "applicant_type",
+              "type": "string"
+            },
+            {
+              "name": "primary_contact_name",
+              "type": "string"
+            },
+            {
+              "name": "primary_contact_email",
+              "type": "string"
+            },
+            {
+              "name": "folder_root_id",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "notes": "One-shot. Staff fires this from the dashboard after Second Desktop Review passes. Builds the checklist for the applicant type, saves to DB, emails applicant, then exits.\n\nUploads and chase are handled separately:\n- WF-03b (process document) is called by WF-03b-web (upload portal webhook) and WF-03d (inbox watcher).\n- WF-03c chases stale cases daily.",
+      "notesInFlow": true
+    },
+    {
+      "id": "wf03a-build-checklist",
+      "name": "Build Checklist",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst applicantType = data.applicant_type;\n\nconst checklists = {\n  Individual: [\n    { doc_type: 'photo_id', label: 'Photo ID (passport or driver licence)', required: true, category: 'identity' },\n    { doc_type: 'proof_of_address', label: 'Proof of address (utility bill or bank statement)', required: true, category: 'identity' },\n    { doc_type: 'cv_resume', label: 'CV / Resume', required: true, category: 'cv' },\n    { doc_type: 'qualifications', label: 'Qualifications certificates', required: true, category: 'cv' },\n    { doc_type: 'existing_licence_docs', label: 'Existing licence documents (if applicable)', required: false, category: 'licence' }\n  ],\n  Corporate: [\n    { doc_type: 'company_extract', label: 'Company extract (auto-fetched from ASIC when available)', required: true, category: 'corporate' },\n    { doc_type: 'ar_car_application_form', label: 'Completed AR / CAR application form', required: true, category: 'corporate' },\n    { doc_type: 'director_shareholder_list', label: 'Director and shareholder list', required: true, category: 'corporate' },\n    { doc_type: 'cv_resume', label: 'CV for key individual(s)', required: true, category: 'cv' },\n    { doc_type: 'qualifications', label: 'Qualifications certificates', required: true, category: 'cv' },\n    { doc_type: 'director_id', label: 'Photo ID for each director', required: true, category: 'identity' },\n    { doc_type: 'beneficial_owner_id', label: 'Photo ID for each beneficial owner >=25%', required: true, category: 'identity' },\n    { doc_type: 'audited_financials', label: 'Last 3 years audited financials', required: true, category: 'financial' },\n    { doc_type: 'proof_of_company_address', label: 'Proof of company address', required: true, category: 'corporate' }\n  ],\n  Fund: [\n    { doc_type: 'investment_manager_docs', label: 'Investment Manager corporate documents', required: true, category: 'fund' },\n    { doc_type: 'information_memorandum', label: 'Proposed Information Memorandum (draft acceptable)', required: true, category: 'fund' },\n    { doc_type: 'investment_mandate', label: 'Investment mandate and strategy document', required: true, category: 'fund' },\n    { doc_type: 'trust_deed', label: 'Trust deed / constitution draft', required: true, category: 'fund' },\n    { doc_type: 'im_cv_track_record', label: \"Investment manager's CV / track record\", required: true, category: 'cv' },\n    { doc_type: 'fund_administrator', label: 'Proposed fund administrator details', required: true, category: 'fund' },\n    { doc_type: 'custodian_details', label: 'Proposed custodian details', required: true, category: 'fund' },\n    { doc_type: 'auditor_details', label: 'Proposed auditor details', required: true, category: 'fund' },\n    { doc_type: 'legal_advice', label: 'Legal advice on fund structure', required: false, category: 'legal' },\n    { doc_type: 'service_provider_terms', label: 'Service provider proposals / term sheets', required: false, category: 'fund' },\n    { doc_type: 'structure_chart', label: 'Organisational / structure chart', required: false, category: 'fund' },\n    { doc_type: 'insurance_details', label: 'Insurance details (PI / cyber / asset-level where applicable)', required: false, category: 'legal' },\n    { doc_type: 'tax_advice', label: 'Tax advice (mandatory for non-traditional asset classes)', required: false, category: 'legal' }\n  ]\n};\n\nconst checklist = checklists[applicantType] || checklists.Individual;\nreturn [{ json: { ...data, checklist } }];"
+      },
+      "notes": "Reference checks (referee_1, referee_2) used to be on this checklist but they aren't files — they're contact details and should be on the intake form. Removed.",
+      "notesInFlow": true
+    },
+    {
+      "id": "wf03a-save-checklist",
+      "name": "Postgres: Save Checklist + Set Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        560,
+        400
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH inserted AS (\n  INSERT INTO car_case_documents (case_id, doc_type, label, category, required, status, created_at)\n  SELECT $1, x->>'doc_type', x->>'label', x->>'category', (x->>'required')::boolean, 'pending', now()\n  FROM jsonb_array_elements($2::jsonb) x\n  ON CONFLICT (case_id, doc_type) DO NOTHING\n  RETURNING id\n)\nUPDATE car_cases\nSET status = 'documents_pending',\n    chase_count = 0,\n    last_chase_at = NULL\nWHERE case_id = $1\nRETURNING case_id, applicant_id, primary_contact_name, primary_contact_email, (SELECT count(*) FROM inserted) AS rows_inserted;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},={{ JSON.stringify($json.checklist) }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notes": "Parameterised, idempotent (ON CONFLICT DO NOTHING). Resets chase state in case the workflow is re-fired.",
+      "notesInFlow": true
+    },
+    {
+      "id": "wf03a-build-email",
+      "name": "Build Checklist Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        400
+      ],
+      "notes": "EMAIL BUILDER — maps applicant_type → the right document checklist (Individual / Corporate / Fund have different doc lists) and assembles the HTML body of the checklist email including the per-applicant secure upload URL.",
+      "parameters": {
+        "jsCode": "const caseData = $input.first().json;\nconst checklist = $('Build Checklist').first().json.checklist;\nconst uploadUrl = `${$env.UPLOAD_BASE_URL || 'https://upload.example.invalid'}/upload/${caseData.applicant_id}`;\nconst inboxEmail = $env.DOCUMENTS_INBOX_EMAIL || 'operator@example.invalid';\n\nconst required = checklist.filter(i => i.required);\nconst optional = checklist.filter(i => !i.required);\n\nlet html = '<ul>';\nrequired.forEach(item => { html += `<li><strong>${item.label}</strong></li>`; });\nhtml += '</ul>';\nif (optional.length > 0) {\n  html += '<p><em>The following are required only where applicable:</em></p><ul>';\n  optional.forEach(item => { html += `<li>${item.label}</li>`; });\n  html += '</ul>';\n}\n\nconst emailBody = `<p>Hi ${caseData.primary_contact_name},</p>\n<p>Thank you for your inquiry. To progress your application we need the following documents:</p>\n${html}\n<p><strong>How to send them — either option:</strong></p>\n<ol>\n  <li>Upload via our secure portal: <a href=\"${uploadUrl}\">${uploadUrl}</a></li>\n  <li>Reply to this email with the files attached, or email <a href=\"mailto:${inboxEmail}\">${inboxEmail}</a></li>\n</ol>\n<p>Please include your applicant ID <strong>${caseData.applicant_id}</strong> in the subject line of any email you send.</p>\n<p>You'll receive a confirmation as each file is received.</p>\n<p>Regards,<br>Alpha Node Compliance Team</p>`;\n\nreturn [{\n  json: {\n    ...caseData,\n    upload_url: uploadUrl,\n    email_subject: `Alpha Node — Document Checklist for ${caseData.applicant_id}`,\n    email_body: emailBody\n  }\n}];"
+      },
+      "notesInFlow": true
+    },
+    {
+      "id": "wf03a-send-email",
+      "name": "Outlook: Send Checklist Email",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        400
+      ],
+      "notes": "INITIAL CHECKLIST EMAIL — sends the document checklist to the applicant via the shared Outlook mailbox. This kicks off WF-03's collection cycle; replies and uploads will be picked up by wf03d_inbox_watcher and wf03b_web_upload respectively.",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.primary_contact_email }}",
+        "subject": "={{ $json.email_subject }}",
+        "bodyContent": "={{ $json.email_body }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Receive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Checklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Checklist": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Save Checklist + Set Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Save Checklist + Set Status": {
+      "main": [
+        [
+          {
+            "node": "Build Checklist Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Checklist Email": {
+      "main": [
+        [
+          {
+            "node": "Outlook: Send Checklist Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

@@ -1,0 +1,677 @@
+{
+  "name": "CAR Trigger MCP",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "3906468d-3995-4805-8e1c-32bf41abea36"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "43813925-71a9-46f3-a6d0-791dd197ea9f",
+      "name": "MCP Server Trigger",
+      "webhookId": "3906468d-3995-4805-8e1c-32bf41abea36",
+      "notes": "CAR CONTROL PLANE - MCP server entry point. Exposes only approved internal workflow tools for staff/agent-assisted CAR operations. Keep inactive until MCP authentication is configured.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "color": 5,
+        "width": 760,
+        "height": 320,
+        "content": "## CAR Trigger MCP\nCentral MCP control plane for staff/agent-triggered CAR workflows.\n\nExposed tools are intentionally narrow:\n- start_document_collection\n- run_document_batch_check\n- launch_research_agents\n- record_ra_completion\n- record_manual_signal\n\nDo not expose public applicant forms, webhooks, scheduled chases, or downstream internal gates directly."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        -260
+      ],
+      "id": "1e1bc55e-8b22-5a9a-bec4-52bdd2b9e6a1",
+      "name": "Design Note"
+    },
+    {
+      "parameters": {
+        "description": "Start WF-03a after staff have completed First Desktop Review, Legal Advice Assessment, and Second Desktop Review. Sends the applicant the tailored document checklist and upload link. Use only when staff have approved moving to document collection.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('case_id', `Numeric car_cases.case_id. Required.`, 'number') }",
+            "applicant_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('applicant_id', `Applicant identifier such as AR-2026-001.`, 'string') }",
+            "applicant_type": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('applicant_type', `One of Individual, Corporate, Fund.`, 'string') }",
+            "primary_contact_name": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('primary_contact_name', `Applicant primary contact full name.`, 'string') }",
+            "primary_contact_email": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('primary_contact_email', `Applicant primary contact email.`, 'string') }",
+            "folder_root_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('folder_root_id', `SharePoint folder root item ID for this case.`, 'string') }"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "case_id",
+              "displayName": "case_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "applicant_id",
+              "displayName": "applicant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "applicant_type",
+              "displayName": "applicant_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "primary_contact_name",
+              "displayName": "primary_contact_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "primary_contact_email",
+              "displayName": "primary_contact_email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "folder_root_id",
+              "displayName": "folder_root_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        260
+      ],
+      "id": "60d5cfb7-5023-58ca-a6b8-aec93c9902ac",
+      "name": "start_document_collection",
+      "notes": "MCP TOOL - calls WF-03 Document Collection (VVltkWJkp8Cz5pss). Start WF-03a after staff have completed First Desktop Review, Legal Advice Assessment, and Second Desktop Review. Sends the applicant the tailored document checklist and upload link. Use only when staff have approved moving to document collection.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Run WF-03b after the applicant has finished uploading documents. Processes all files in the supplied SharePoint folder or explicit files_json list, updates checklist rows, logs unmatched files, sends one consolidated acknowledgement email, and signals documents_ready only if complete.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('case_id', `Numeric car_cases.case_id. Required.`, 'number') }",
+            "applicant_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('applicant_id', `Optional applicant identifier if known.`, 'string') }",
+            "source_drive_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('source_drive_id', `Optional SharePoint drive ID. Leave blank to use n8n SHAREPOINT_DRIVE_ID env var.`, 'string') }",
+            "folder_root_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('folder_root_id', `Optional case root folder item ID. Usually loaded from DB by WF-03b if omitted.`, 'string') }",
+            "folder_item_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('folder_item_id', `Optional exact SharePoint folder item ID to scan.`, 'string') }",
+            "folder_path": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('folder_path', `Optional SharePoint folder path to scan.`, 'string') }",
+            "upload_subfolder": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('upload_subfolder', `Optional subfolder under case root. Default: 02_Identity_Documents.`, 'string') }",
+            "files_json": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('files_json', `Optional JSON array of files with file_id/id and file_name/name.`, 'string') }",
+            "source": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('source', `Optional source label. Default: manual_batch.`, 'string') }"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "case_id",
+              "displayName": "case_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "applicant_id",
+              "displayName": "applicant_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "source_drive_id",
+              "displayName": "source_drive_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "folder_root_id",
+              "displayName": "folder_root_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "folder_item_id",
+              "displayName": "folder_item_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "folder_path",
+              "displayName": "folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "upload_subfolder",
+              "displayName": "upload_subfolder",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "files_json",
+              "displayName": "files_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        260
+      ],
+      "id": "063b4b6b-819d-584d-aa96-52086926b68a",
+      "name": "run_document_batch_check",
+      "notes": "MCP TOOL - calls WF-03b Batch Document Check (k2JGk8qT2Rf7j6GC). Run WF-03b after the applicant has finished uploading documents. Processes all files in the supplied SharePoint folder or explicit files_json list, updates checklist rows, logs unmatched files, sends one consolidated acknowledgement email, and signals documents_ready only if complete.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Record a manual compliance signal in WF-MS. Use for KYC complete, DD/research readiness flags, letter signed, payment received, LOA signed, or contracts executed. The workflow logs an audit row and routes pre-DD signals through WF-07 signal_completion; letter_signed + payment_received can trigger WF-09.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('case_id', `Numeric car_cases.case_id. Required.`, 'number') }",
+            "signal_type": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('signal_type', `Allowed: kyc_ready, references_ready, meetings_ready, ra01_ready, ra02_ready, ra03_ready, ra04_ready, ra05_ready, ra06_ready, afp_ready, documents_ready, letter_signed, payment_received, loa_signed, contracts_executed.`, 'string') }",
+            "evidence_url": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('evidence_url', `SharePoint or source evidence URL. Optional but strongly recommended.`, 'string') }",
+            "notes": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('notes', `Context or conditions for the manual signal.`, 'string') }",
+            "submitted_by": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('submitted_by', `Name or email of the staff member/agent recording the signal.`, 'string') }"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "case_id",
+              "displayName": "case_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "signal_type",
+              "displayName": "signal_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "evidence_url",
+              "displayName": "evidence_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "submitted_by",
+              "displayName": "submitted_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        260
+      ],
+      "id": "b06c9c47-0e0e-5d5d-bfa9-263f261527c5",
+      "name": "record_manual_signal",
+      "notes": "MCP TOOL - calls WF-MS Manual Signal Sender (sIc0xVlwrXzWGfSL). Record a manual compliance signal in WF-MS. Use for KYC complete, DD/research readiness flags, letter signed, payment received, LOA signed, or contracts executed. The workflow logs an audit row and routes pre-DD signals through WF-07 signal_completion; letter_signed + payment_received can trigger WF-09.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Launch the applicable Research Agent jobs for a case after documents/manual checks are ready. By default it resolves RAs from applicant_type; ra_codes_json can override the exact RA list. If CAR_RA_RUNNER_URL is configured, it fires the runner; otherwise it logs the launch and alerts Teams for manual RA execution.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('case_id', `Numeric car_cases.case_id. Required.`, 'number') }",
+            "ra_codes_json": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('ra_codes_json', `Optional JSON array or comma list such as [\"RA-01\",\"RA-06\"]. Leave blank to auto-select by applicant type.`, 'string') }",
+            "include_infrastructure_research": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('include_infrastructure_research', `Optional boolean. True adds RA-05 Infrastructure & Exchange Research.`, 'boolean') }",
+            "force_relaunch": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('force_relaunch', `Optional boolean. True permits relaunching an RA already marked launched/completed.`, 'boolean') }",
+            "runner_url": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('runner_url', `Optional RA runner endpoint. Leave blank to use n8n CAR_RA_RUNNER_URL env var.`, 'string') }",
+            "output_base_path": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('output_base_path', `Optional output folder path for RA reports.`, 'string') }",
+            "launched_by": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('launched_by', `Name or email of staff/agent launching the RAs.`, 'string') }",
+            "notes": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('notes', `Optional launch context or staff instruction.`, 'string') }"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "case_id",
+              "displayName": "case_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "ra_codes_json",
+              "displayName": "ra_codes_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "include_infrastructure_research",
+              "displayName": "include_infrastructure_research",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "force_relaunch",
+              "displayName": "force_relaunch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "runner_url",
+              "displayName": "runner_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_base_path",
+              "displayName": "output_base_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "launched_by",
+              "displayName": "launched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        260
+      ],
+      "id": "ccfb53b1-53eb-54d8-943e-af273cea8472",
+      "name": "launch_research_agents",
+      "notes": "MCP TOOL - calls WF-RA Research Agent Launcher (k0YtjeWdGkDJ0S2k). Launch the applicable Research Agent jobs for a case after documents/manual checks are ready. By default it resolves RAs from applicant_type; ra_codes_json can override the exact RA list. If CAR_RA_RUNNER_URL is configured, it fires the runner; otherwise it logs the launch and alerts Teams for manual RA execution.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Record a Research Agent completion result and forward the corresponding raXX_ready signal into WF-07 signal_completion. Use this when an RA report is available as a URL, JSON path, inline JSON, or plain report text.",
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('case_id', `Numeric car_cases.case_id. Required.`, 'number') }",
+            "agent": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('agent', `Research Agent code RA-01 through RA-06. Required.`, 'string') }",
+            "report_url": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('report_url', `Optional SharePoint/source URL for the RA report.`, 'string') }",
+            "report_json_path": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('report_json_path', `Optional path to machine-readable RA JSON output.`, 'string') }",
+            "report_json": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('report_json', `Optional JSON string containing structured RA findings.`, 'string') }",
+            "report": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('report', `Optional plain text or markdown summary of the RA report.`, 'string') }",
+            "completed_by": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('completed_by', `Name/email/system that completed the RA.`, 'string') }",
+            "notes": "={ /*n8n-auto-generated-fromAI-override*/ $fromAI('notes', `Optional completion notes.`, 'string') }"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "case_id",
+              "displayName": "case_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "report_url",
+              "displayName": "report_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "report_json_path",
+              "displayName": "report_json_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "report_json",
+              "displayName": "report_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "report",
+              "displayName": "report",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "completed_by",
+              "displayName": "completed_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        260
+      ],
+      "id": "4f946f11-dd55-5cdb-bce3-069a4ee8c049",
+      "name": "record_ra_completion",
+      "notes": "MCP TOOL - calls WF-RA Research Agent Completion Receiver (CfBift2IsRakKCUI). Record a Research Agent completion result and forward the corresponding raXX_ready signal into WF-07 signal_completion. Use this when an RA report is available as a URL, JSON path, inline JSON, or plain report text.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "https://n8n.example.invalid/mcp/3906468d-3995-4805-8e1c-32bf41abea36/sse",
+        "authentication": "none",
+        "include": "selected",
+        "includeTools": [
+          "start_document_collection",
+          "run_document_batch_check",
+          "launch_research_agents",
+          "record_ra_completion",
+          "record_manual_signal"
+        ],
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -80
+      ],
+      "id": "ce67199b-fd22-5c69-9685-9606c8e3a8c2",
+      "name": "CAR MCP Client Tool",
+      "notes": "UNATTACHED MCP CLIENT TOOL - copy this node into an AI Agent workflow and connect it to the agent's ai_tool input. It points to this CAR Trigger MCP server SSE endpoint and exposes only selected CAR tools. If MCP authentication is enabled on the server, set the matching auth credential here before use.",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "start_document_collection": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "run_document_batch_check": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "record_manual_signal": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "launch_research_agents": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "record_ra_completion": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "active": false
+}

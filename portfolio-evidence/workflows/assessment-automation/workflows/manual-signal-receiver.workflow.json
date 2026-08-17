@@ -1,0 +1,505 @@
+{
+  "name": "WF-MS Manual Signal Sender",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "manual-signal-sender",
+        "formTitle": "Alpha Node — Manual Compliance Signal",
+        "formDescription": "Record a manual compliance step (KYC, references, signing, payment, etc.). Each submission is logged for audit and may trigger the next workflow.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Case ID",
+              "placeholder": "Numeric car_cases.case_id",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Signal type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "kyc_ready"
+                  },
+                  {
+                    "option": "references_ready"
+                  },
+                  {
+                    "option": "meetings_ready"
+                  },
+                  {
+                    "option": "ra01_ready"
+                  },
+                  {
+                    "option": "ra02_ready"
+                  },
+                  {
+                    "option": "ra03_ready"
+                  },
+                  {
+                    "option": "ra04_ready"
+                  },
+                  {
+                    "option": "ra05_ready"
+                  },
+                  {
+                    "option": "ra06_ready"
+                  },
+                  {
+                    "option": "afp_ready"
+                  },
+                  {
+                    "option": "documents_ready"
+                  },
+                  {
+                    "option": "letter_signed"
+                  },
+                  {
+                    "option": "payment_received"
+                  },
+                  {
+                    "option": "loa_signed"
+                  },
+                  {
+                    "option": "contracts_executed"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Evidence URL",
+              "placeholder": "SharePoint link to KYC report / signed letter / etc. (optional but recommended)",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "placeholder": "Context, conditions, or any flags for the next reviewer",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Submitted by",
+              "placeholder": "your name or email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "form-trigger",
+      "name": "Manual Signal Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "ENTRY POINT - staff-facing n8n form for recording manual completion signals such as KYC complete, letter signed, payment received, or onboarding task completion.",
+      "webhookId": "manual-signal-sender",
+      "credentials": {},
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "case_id",
+              "type": "number"
+            },
+            {
+              "name": "signal_type",
+              "type": "string"
+            },
+            {
+              "name": "evidence_url",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            },
+            {
+              "name": "submitted_by",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "ded71c63-0e41-5b56-a94b-9af9f50a3e39",
+      "name": "Tool Signal Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        640
+      ],
+      "notes": "MCP/SUB-WORKFLOW ENTRY POINT - structured trigger used by CAR Trigger MCP and other internal workflows. Accepts case_id, signal_type, evidence_url, notes, submitted_by.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalise + validate inputs from either the public form or the MCP/sub-workflow trigger.\nconst input = $input.first().json;\nconst rawCaseId = input.case_id ?? input['Case ID'] ?? '';\nconst caseId = Number(rawCaseId);\nconst signalType = String(input.signal_type ?? input['Signal type'] ?? '').trim();\nconst evidenceUrl = String(input.evidence_url ?? input['Evidence URL'] ?? '').trim() || null;\nconst notes = String(input.notes ?? input['Notes'] ?? '').trim() || null;\nconst submittedBy = String(input.submitted_by ?? input['Submitted by'] ?? '').trim();\n\nif (!Number.isInteger(caseId) || caseId <= 0) {\n  throw new Error('case_id must be a positive numeric car_cases.case_id');\n}\nif (!signalType) {\n  throw new Error('signal_type is required');\n}\nif (!submittedBy) {\n  throw new Error('submitted_by is required');\n}\n\nconst preDD = ['kyc_ready', 'references_ready', 'meetings_ready', 'ra01_ready',\n               'ra02_ready', 'ra03_ready', 'ra04_ready', 'ra05_ready',\n               'ra06_ready', 'afp_ready', 'documents_ready'];\nconst postDD = ['letter_signed', 'payment_received', 'loa_signed',\n                'contracts_executed'];\nconst isPreDD = preDD.includes(signalType);\nconst isPostDD = postDD.includes(signalType);\nif (!isPreDD && !isPostDD) {\n  throw new Error('unknown signal_type: ' + signalType);\n}\n\nreturn [{\n  json: {\n    case_id: caseId,\n    signal_type: signalType,\n    evidence_url: evidenceUrl,\n    notes,\n    submitted_by: submittedBy,\n    is_pre_dd: isPreDD,\n    is_post_dd: isPostDD,\n  }\n}];\n"
+      },
+      "id": "validate-input",
+      "name": "Validate & Classify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "notes": "INPUT NORMALIZATION - accepts either form labels or snake_case MCP/sub-workflow fields. Validates numeric BIGINT case_id and classifies pre-DD vs post-DD signal handling.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO car_manual_signals (case_id, signal_type, evidence_url, notes, submitted_by)\nVALUES ($1, $2, $3, $4, $5)\nRETURNING signal_id, submitted_at;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},={{ $json.signal_type }},={{ $json.evidence_url }},={{ $json.notes }},={{ $json.submitted_by }}"
+        }
+      },
+      "id": "audit-insert",
+      "name": "Postgres: Insert audit row",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        300
+      ],
+      "notes": "AUDIT LOG - records every manual signal submission in Postgres so manual actions remain traceable before any workflow branching runs.",
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Validate & Classify').item.json.is_pre_dd }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-pre-dd",
+      "name": "IF: Pre-DD signal?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "notes": "SIGNAL ROUTER - TRUE branch sends DD gate signals to signal_completion; FALSE branch handles post-DD engagement/onboarding flags locally.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={{ $('Validate & Classify').item.json.case_id }}",
+            "signal_name": "={{ $('Validate & Classify').item.json.signal_type }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "exec-signal-completion",
+      "name": "Execute: signal_completion",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        220
+      ],
+      "notes": "DD GATE SIGNAL - calls the WF-07 signal_completion sub-workflow so pre-DD manual milestones can update car_case_gate_inputs.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Flip the post-DD flag directly (signal_completion only handles pre-DD flags)\nUPDATE car_case_gate_inputs\nSET\n  letter_signed       = CASE WHEN $2 = 'letter_signed'       THEN TRUE ELSE letter_signed       END,\n  payment_received    = CASE WHEN $2 = 'payment_received'    THEN TRUE ELSE payment_received    END,\n  loa_signed          = CASE WHEN $2 = 'loa_signed'          THEN TRUE ELSE loa_signed          END,\n  contracts_executed  = CASE WHEN $2 = 'contracts_executed'  THEN TRUE ELSE contracts_executed  END\nWHERE case_id = $1\nRETURNING case_id, letter_signed, payment_received, loa_signed, contracts_executed;",
+        "options": {
+          "queryReplacement": "={{ $('Validate & Classify').item.json.case_id }},={{ $('Validate & Classify').item.json.signal_type }}"
+        }
+      },
+      "id": "postdd-flag-update",
+      "name": "Postgres: Set post-DD flag",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1120,
+        380
+      ],
+      "notes": "POST-DD FLAG UPDATE - stores manual engagement/onboarding completion state after DD, such as signed letter or payment received.",
+      "credentials": {
+        "postgres": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.letter_signed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.payment_received }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.contracts_executed }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-post-dd-ready",
+      "name": "IF: Engagement ready for WF-09?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        380
+      ],
+      "notes": "CONTRACT READINESS GATE - checks whether the post-DD manual flags now satisfy the handoff criteria for WF-09 contract preparation.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WORKFLOW_ID_PLACEHOLDER",
+          "mode": "id",
+          "cachedResultName": "Select deployed dependency"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={{ $('Validate & Classify').item.json.case_id }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "exec-wf09",
+      "name": "Execute: WF-09 Contract Prep",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        320
+      ],
+      "notes": "WF-09 HANDOFF - starts contract preparation once engagement-letter signing and deposit/payment prerequisites are recorded.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:417a81363c604f08801f073b0ea6e3b8@thread.v2",
+          "mode": "list",
+          "cachedResultName": "CAR Assessment Automation (group)"
+        },
+        "contentType": "html",
+        "message": "=<strong>Manual signal recorded</strong><br><strong>Case:</strong> {{ $('Validate & Classify').item.json.case_id }}<br><strong>Signal:</strong> {{ $('Validate & Classify').item.json.signal_type }}<br><strong>Submitted by:</strong> {{ $('Validate & Classify').item.json.submitted_by }}<br>{{ $('Validate & Classify').item.json.evidence_url ? '<strong>Evidence:</strong> <a href=\"' + $('Validate & Classify').item.json.evidence_url + '\">' + $('Validate & Classify').item.json.evidence_url + '</a><br>' : '' }}{{ $('Validate & Classify').item.json.notes ? '<strong>Notes:</strong> ' + $('Validate & Classify').item.json.notes : '' }}",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "teams-notify",
+      "name": "Teams: Notify signal recorded",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        540
+      ],
+      "notes": "STAFF CONFIRMATION - posts to Teams that the manual signal was recorded and, where applicable, downstream workflows were triggered.",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "CREDENTIAL_ID_PLACEHOLDER",
+          "name": "Select in n8n"
+        }
+      },
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Manual Signal Form": {
+      "main": [
+        [
+          {
+            "node": "Validate & Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Classify": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Insert audit row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Insert audit row": {
+      "main": [
+        [
+          {
+            "node": "IF: Pre-DD signal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Pre-DD signal?": {
+      "main": [
+        [
+          {
+            "node": "Execute: signal_completion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres: Set post-DD flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: signal_completion": {
+      "main": [
+        [
+          {
+            "node": "Teams: Notify signal recorded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Set post-DD flag": {
+      "main": [
+        [
+          {
+            "node": "IF: Engagement ready for WF-09?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Engagement ready for WF-09?": {
+      "main": [
+        [
+          {
+            "node": "Execute: WF-09 Contract Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Teams: Notify signal recorded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: WF-09 Contract Prep": {
+      "main": [
+        [
+          {
+            "node": "Teams: Notify signal recorded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Signal Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "active": false
+}

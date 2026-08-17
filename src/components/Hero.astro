@@ -1,0 +1,43 @@
+---
+import { downloads } from "../data/assets";
+---
+
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="hero-copy" data-hero-copy>
+    <p class="section-label">ChrisBuen / AI automation builder</p>
+    <h1 id="hero-title">Automation for work that still needs <span>judgement.</span></h1>
+    <p class="hero-intro">I turn scattered evidence, manual handoffs, and high-stakes review into systems that show their work before they move.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="#onboarding">Watch the flagship system</a>
+      <a class="button button-secondary" href={downloads[0].href} download={downloads[0].filename}>Download the short brief <span aria-hidden="true">↓</span></a>
+    </div>
+  </div>
+
+  <div class="hero-stage" data-hero-stage aria-label="A fragmented applicant record is organized into an evidence plan, three accountable work lanes, and a human decision record.">
+    <div class="hero-stage__bar"><span>CASE ROOM / 024</span><span><i></i> EVIDENCE IN MOTION</span></div>
+    <div class="hero-fragments" aria-hidden="true">
+      <div class="hero-note" data-hero-fragment><span>EMAIL</span><strong>Applicant inquiry</strong><small>identity and activity</small></div>
+      <div class="hero-note" data-hero-fragment><span>PDF</span><strong>Source documents</strong><small>inventory incomplete</small></div>
+      <div class="hero-note" data-hero-fragment><span>TASK</span><strong>Staff milestone</strong><small>human owned</small></div>
+    </div>
+    <div class="hero-casefile" data-hero-casefile>
+      <span class="hero-casefile__tab">EVIDENCE PLAN</span>
+      <strong>One applicant. Three accountable lanes.</strong>
+      <div class="hero-lanes">
+        <span data-hero-lane>Documents <i></i></span>
+        <span data-hero-lane>Research <i></i></span>
+        <span data-hero-lane>Manual evidence <i></i></span>
+      </div>
+    </div>
+    <div class="hero-gate" data-hero-gate>
+      <span>RECONCILE</span>
+      <strong>Complete?</strong>
+      <small>Missing evidence returns. Complete evidence reaches a person.</small>
+    </div>
+    <div class="hero-decision" data-hero-decision><span>NAMED REVIEWER</span><strong>Decision with context intact</strong></div>
+    <div class="hero-route hero-route--one" aria-hidden="true"></div>
+    <div class="hero-route hero-route--two" aria-hidden="true"></div>
+    <div class="hero-route hero-route--three" aria-hidden="true"></div>
+  </div>
+  <a class="scroll-cue" href="#onboarding"><span aria-hidden="true">↓</span> Start with a real client problem</a>
+</section>

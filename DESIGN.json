@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-16T00:00:00+08:00",
+  "title": "Design System: ChrisBuen Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "graphite": { "role": "neutral", "displayName": "Graphite", "canonical": "#070A0B", "tonalRamp": ["#070A0B", "#101517", "#182123", "#243033", "#3B4948", "#66716F", "#A7AEAA", "#F2EFE8"] },
+      "signal-teal": { "role": "primary", "displayName": "Signal Teal", "canonical": "#6FE0CF", "tonalRamp": ["#092622", "#103E37", "#17584E", "#247466", "#3A9584", "#55B7A6", "#6FE0CF", "#D8FAF4"] },
+      "review-amber": { "role": "secondary", "displayName": "Review Amber", "canonical": "#F2B84B", "tonalRamp": ["#2A1C06", "#49320C", "#694B14", "#8D671F", "#B88730", "#DCA340", "#F2B84B", "#FFF0C8"] },
+      "blocked-red": { "role": "tertiary", "displayName": "Blocked Red", "canonical": "#EF6A67", "tonalRamp": ["#2A0B0B", "#481414", "#682120", "#8D3230", "#B64A47", "#D75B58", "#EF6A67", "#FFD9D7"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero and rare section-scale statements." },
+      "body": { "displayName": "Body", "purpose": "Readable case-study narrative capped near 70 characters." },
+      "label": { "displayName": "Operational label", "purpose": "Evidence metadata, state, and system orientation." }
+    },
+    "shadows": [
+      { "name": "ambient-stage", "value": "0 24px 80px rgba(0,0,0,0.28)", "purpose": "Only for a major moving stage separating from the background." }
+    ],
+    "motion": [
+      { "name": "ease-enter", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Entrances and transform-based hover." },
+      { "name": "ease-move", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Directional stage and panel movement." },
+      { "name": "duration-fast", "value": "160ms", "purpose": "Press, focus, and small state feedback." },
+      { "name": "duration-medium", "value": "280ms", "purpose": "Expandable content and local transitions." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "390px" },
+      { "name": "tablet", "value": "768px" },
+      { "name": "desktop", "value": "1024px" },
+      { "name": "wide", "value": "1440px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Warm paper-like action used once in the hero.",
+      "html": "<a class=\"ds-action-primary\" href=\"#work\">Explore the systems</a>",
+      "css": ".ds-action-primary { display:inline-flex; background:#F2EFE8; color:#070A0B; padding:14px 20px; border-radius:3px; font:600 15px/1 Instrument Sans,Arial,sans-serif; text-decoration:none; transition:transform 160ms cubic-bezier(.22,1,.36,1),background-color 160ms cubic-bezier(.22,1,.36,1); } .ds-action-primary:hover { transform:translateY(-2px); } .ds-action-primary:focus-visible { outline:2px solid #6FE0CF; outline-offset:3px; }"
+    },
+    {
+      "name": "Workflow Atlas",
+      "kind": "custom",
+      "refersTo": "workflow-atlas",
+      "description": "The light schematic surface that pairs an authoritative system map with its decision and correction tree.",
+      "html": "<section class=\"ds-workflow-atlas\"><nav>System flow · Decision + correction</nav><figure><img alt=\"Source-backed workflow schematic\"></figure></section>",
+      "css": ".ds-workflow-atlas { background:#F4F1E9; color:#17212D; border:1px solid #D7D4CA; } .ds-workflow-atlas nav { background:#17212D; color:#F2EFE8; padding:12px 20px; } .ds-workflow-atlas figure { min-height:480px; margin:0; padding:24px; overflow:hidden; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Evidence Room",
+    "overview": "A quiet, dimly lit operations room where inspectable work moves through framed evidence, routing rails, human review, and controlled release.",
+    "keyCharacteristics": ["Full-bleed graphite field", "Source-backed schematic atlases", "State-bound signal colors", "Calm reading intervals", "Reversible inspection"],
+    "rules": [
+      { "name": "The State Color Rule", "body": "Teal, amber, and red communicate system state and are forbidden as arbitrary decoration.", "section": "colors" },
+      { "name": "The Two-Voice Rule", "body": "Large sans language carries meaning; mono language orients the reader inside the system.", "section": "typography" },
+      { "name": "The Flat Evidence Rule", "body": "Evidence surfaces remain stable and use elevation only to express hierarchy.", "section": "elevation" }
+    ],
+    "dos": ["Do make the first viewport complete before animation runs.", "Do connect every state to real case evidence.", "Do preserve keyboard, touch, mobile, and reduced-motion access."],
+    "donts": ["Don't use neon-grid AI startup styling.", "Don't fabricate metrics, testimonials, or system telemetry.", "Don't hijack scrolling or animate layout properties."]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "brand": {
+    "site_name": "Be AI Fluent",
+    "tagline": "Practical AI fluency for everyday work"
+  },
+  "logo": {
+    "path": "",
+    "max_width": 220,
+    "max_height": 120,
+    "margin": 48
+  },
+  "palette": {
+    "background": "#F3EEE6",
+    "surface": "#FFFCF7",
+    "text": "#111111",
+    "muted_text": "#5E5A54",
+    "accent": "#E02020",
+    "accent_soft": "#F5D8D8",
+    "line": "#151515"
+  },
+  "sizes": {
+    "featured": {
+      "width": 1600,
+      "height": 900
+    },
+    "body": {
+      "width": 1600,
+      "height": 900
+    }
+  },
+  "spacing": {
+    "padding": 72,
+    "radius": 24
+  },
+  "typography": {
+    "display": [
+      "assets/fonts/Poppins-SemiBold.ttf",
+      "assets/fonts/Poppins-Regular.ttf"
+    ],
+    "heading": [
+      "assets/fonts/Poppins-SemiBold.ttf",
+      "assets/fonts/Poppins-Regular.ttf"
+    ],
+    "accent_display": [
+      "assets/fonts/FjordOne-Regular.ttf"
+    ],
+    "body": [
+      "assets/fonts/Manrope-Variable.ttf",
+      "assets/fonts/OpenSans-Variable.ttf"
+    ],
+    "utility": [
+      "assets/fonts/OpenSans-Variable.ttf",
+      "assets/fonts/Manrope-Variable.ttf"
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Stream Due-Diligence Case Coordination"
+  short_description: "Coordinate specialist research, evidence gaps, and human-reviewable case handoffs"
+  default_prompt: "Use $coordinate-due-diligence-case to inventory this case, route missing research, and prepare a human-reviewable synthesis."
