@@ -18,7 +18,7 @@
     "validate:public": "node scripts/validate-public.mjs",
     "validate:repo": "node scripts/validate-repository.mjs",
     "validate:variants": "node scripts/verify-build-variants.mjs",
-    "validate": "npm run check && npm run build && npm run validate:public && npm run validate:variants && npm run validate:public",
+    "validate": "npm run check && npm run build && npm run validate:public && npm run validate:variants && npm run build && npm run validate:public",
     "release:ready": "npm run validate && npm run validate:repo"
   },
   "dependencies": {
