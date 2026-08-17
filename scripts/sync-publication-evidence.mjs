@@ -132,21 +132,25 @@ async function copyApprovedFile(relativePath) {
   if (sourceInfo.size > 25 * 1024 * 1024) throw new Error(`Approved source exceeds 25 MB: ${normalized}`);
 
   const sourceBuffer = await readFile(source);
+  let outputBuffer = sourceBuffer;
   if (isTextFile(source)) {
     const text = sourceBuffer.toString("utf8");
     for (const pattern of secretPatterns) {
       if (pattern.test(text)) throw new Error(`Potential secret or local path in ${normalized}: ${pattern}`);
     }
+    outputBuffer = Buffer.from(text.replace(/\r\n?/g, "\n"), "utf8");
   }
 
   await mkdir(path.dirname(destination), { recursive: true });
-  await cp(source, destination);
-  const outputBuffer = await readFile(destination);
+  if (isTextFile(source)) await writeFile(destination, outputBuffer);
+  else await cp(source, destination);
   entries.push({
     source: `Portfolio Reference/${normalized}`,
     destination: `portfolio-evidence/${normalized}`,
     bytes: outputBuffer.byteLength,
     sha256: digest(outputBuffer),
+    sourceSha256: digest(sourceBuffer),
+    ...(digest(outputBuffer) !== digest(sourceBuffer) ? { transform: "Text line endings normalized to LF." } : {}),
   });
 }
 
@@ -158,7 +162,7 @@ async function writePublicExtract(relativePath, transform) {
   assertInside(destinationRoot, destination, "Destination");
 
   const sourceBuffer = await readFile(source);
-  const output = transform(sourceBuffer.toString("utf8"));
+  const output = transform(sourceBuffer.toString("utf8")).replace(/\r\n?/g, "\n");
   if (!output || output === sourceBuffer.toString("utf8")) throw new Error(`Public extract transform did not run: ${normalized}`);
   for (const pattern of secretPatterns) {
     if (pattern.test(output)) throw new Error(`Potential secret or local path in transformed ${normalized}: ${pattern}`);

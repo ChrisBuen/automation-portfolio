@@ -7,67 +7,78 @@
       "source": "Portfolio Reference/dependencies/reference/disclosure/publication-policy.md",
       "destination": "portfolio-evidence/dependencies/reference/disclosure/publication-policy.md",
       "bytes": 891,
-      "sha256": "5f4e75dea4801111423028bf4efeed38e21667d22fa8b836f92f36f31e004c5f"
+      "sha256": "5f4e75dea4801111423028bf4efeed38e21667d22fa8b836f92f36f31e004c5f",
+      "sourceSha256": "5f4e75dea4801111423028bf4efeed38e21667d22fa8b836f92f36f31e004c5f"
     },
     {
       "source": "Portfolio Reference/dependencies/reference/portfolio-documents/chrisbuen-ai-automation-brief.pdf",
       "destination": "portfolio-evidence/dependencies/reference/portfolio-documents/chrisbuen-ai-automation-brief.pdf",
       "bytes": 125968,
-      "sha256": "280d2eb7a6a870b593a04ad2e200c2e9bc00905f64255c2c9f622f734728ff1f"
+      "sha256": "280d2eb7a6a870b593a04ad2e200c2e9bc00905f64255c2c9f622f734728ff1f",
+      "sourceSha256": "280d2eb7a6a870b593a04ad2e200c2e9bc00905f64255c2c9f622f734728ff1f"
     },
     {
       "source": "Portfolio Reference/dependencies/reference/portfolio-documents/chrisbuen-ai-automation-casebook.pdf",
       "destination": "portfolio-evidence/dependencies/reference/portfolio-documents/chrisbuen-ai-automation-casebook.pdf",
       "bytes": 722350,
-      "sha256": "7ff96a60b4bfa151fa5cfa7f04e3ce9e4e503fb8fde80158def8d17d3d5152d0"
+      "sha256": "7ff96a60b4bfa151fa5cfa7f04e3ce9e4e503fb8fde80158def8d17d3d5152d0",
+      "sourceSha256": "7ff96a60b4bfa151fa5cfa7f04e3ce9e4e503fb8fde80158def8d17d3d5152d0"
     },
     {
       "source": "Portfolio Reference/dependencies/reference/portfolio-documents/chrisbuen-project-evidence-appendix.pdf",
       "destination": "portfolio-evidence/dependencies/reference/portfolio-documents/chrisbuen-project-evidence-appendix.pdf",
       "bytes": 174284,
-      "sha256": "40f460b077dbf80912dcb2a32ca1384fe8fc17f739b19778c9456811e4e0c09f"
+      "sha256": "40f460b077dbf80912dcb2a32ca1384fe8fc17f739b19778c9456811e4e0c09f",
+      "sourceSha256": "40f460b077dbf80912dcb2a32ca1384fe8fc17f739b19778c9456811e4e0c09f"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/agents/openai.yaml",
       "destination": "portfolio-evidence/skills/alpha-node-branding/agents/openai.yaml",
       "bytes": 220,
-      "sha256": "45cd7e54e07d3798b48dfca71aba65bd9a5f90099c449b0c8c8d376786a4d9f5"
+      "sha256": "45cd7e54e07d3798b48dfca71aba65bd9a5f90099c449b0c8c8d376786a4d9f5",
+      "sourceSha256": "45cd7e54e07d3798b48dfca71aba65bd9a5f90099c449b0c8c8d376786a4d9f5"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/references/brand-guidelines.md",
       "destination": "portfolio-evidence/skills/alpha-node-branding/references/brand-guidelines.md",
       "bytes": 3111,
-      "sha256": "d89d36f101c5e745a5b45db4895d367e72ff1b1749e97134507f6c599b181cc7"
+      "sha256": "d89d36f101c5e745a5b45db4895d367e72ff1b1749e97134507f6c599b181cc7",
+      "sourceSha256": "d89d36f101c5e745a5b45db4895d367e72ff1b1749e97134507f6c599b181cc7"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/references/brand-tokens.json",
       "destination": "portfolio-evidence/skills/alpha-node-branding/references/brand-tokens.json",
       "bytes": 1623,
-      "sha256": "854b5217ffa5e1586373a1cd88d75daefbbabd37f871733dcc82b3895db3a5c5"
+      "sha256": "854b5217ffa5e1586373a1cd88d75daefbbabd37f871733dcc82b3895db3a5c5",
+      "sourceSha256": "854b5217ffa5e1586373a1cd88d75daefbbabd37f871733dcc82b3895db3a5c5"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/references/diagrams/alpha-node-branding-skill-diagram.excalidraw",
       "destination": "portfolio-evidence/skills/alpha-node-branding/references/diagrams/alpha-node-branding-skill-diagram.excalidraw",
       "bytes": 41081,
-      "sha256": "2bc2df297c9582ffeafbe333f4530b2b6f17545f5457fa031c9b1137726796bf"
+      "sha256": "2bc2df297c9582ffeafbe333f4530b2b6f17545f5457fa031c9b1137726796bf",
+      "sourceSha256": "2bc2df297c9582ffeafbe333f4530b2b6f17545f5457fa031c9b1137726796bf"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/references/diagrams/alpha-node-branding-skill-diagram.png",
       "destination": "portfolio-evidence/skills/alpha-node-branding/references/diagrams/alpha-node-branding-skill-diagram.png",
       "bytes": 1265773,
-      "sha256": "1683676ea6512d90e0c9044809bb1cf9ed6ca689f9b234333368706951cde6db"
+      "sha256": "1683676ea6512d90e0c9044809bb1cf9ed6ca689f9b234333368706951cde6db",
+      "sourceSha256": "1683676ea6512d90e0c9044809bb1cf9ed6ca689f9b234333368706951cde6db"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/references/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/skills/alpha-node-branding/references/diagrams/diagram-quality-log.md",
       "bytes": 698,
-      "sha256": "479714f1ee4cd67fb1b64ef776830bb22241622d19f1245f16b0e5932826f6b4"
+      "sha256": "479714f1ee4cd67fb1b64ef776830bb22241622d19f1245f16b0e5932826f6b4",
+      "sourceSha256": "479714f1ee4cd67fb1b64ef776830bb22241622d19f1245f16b0e5932826f6b4"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/references/workflow-specification.md",
       "destination": "portfolio-evidence/skills/alpha-node-branding/references/workflow-specification.md",
       "bytes": 3165,
-      "sha256": "28878eceadb23a88628001c1098d1dfad49c4b5db1b23f4e7d339bc346a22464"
+      "sha256": "28878eceadb23a88628001c1098d1dfad49c4b5db1b23f4e7d339bc346a22464",
+      "sourceSha256": "28878eceadb23a88628001c1098d1dfad49c4b5db1b23f4e7d339bc346a22464"
     },
     {
       "source": "Portfolio Reference/skills/alpha-node-branding/SKILL.md",
@@ -80,860 +91,1023 @@
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/agents/openai.yaml",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/agents/openai.yaml",
-      "bytes": 326,
-      "sha256": "b7ebeed636f4dbca819762099afaa11ad7c67ccf63c83ff30196378dcad30556"
+      "bytes": 324,
+      "sha256": "b3b331d35f471bac715848fb46410d3d68026cee970b4c49ec9b1b27090d8602",
+      "sourceSha256": "b7ebeed636f4dbca819762099afaa11ad7c67ccf63c83ff30196378dcad30556",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/README.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/README.md",
       "bytes": 311,
-      "sha256": "0185c68f634716f33eaa3897bdb35a97b2d4ec21f2f7f0c52f6f80035af769ce"
+      "sha256": "0185c68f634716f33eaa3897bdb35a97b2d4ec21f2f7f0c52f6f80035af769ce",
+      "sourceSha256": "0185c68f634716f33eaa3897bdb35a97b2d4ec21f2f7f0c52f6f80035af769ce"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/diagrams/coordinate-due-diligence-case-skill-diagram.excalidraw",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/diagrams/coordinate-due-diligence-case-skill-diagram.excalidraw",
       "bytes": 40909,
-      "sha256": "a2c3a47728622d5018411c2f84fc81f90c71070d403fa284bf8631a1d946e8cb"
+      "sha256": "a2c3a47728622d5018411c2f84fc81f90c71070d403fa284bf8631a1d946e8cb",
+      "sourceSha256": "a2c3a47728622d5018411c2f84fc81f90c71070d403fa284bf8631a1d946e8cb"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/diagrams/coordinate-due-diligence-case-skill-diagram.png",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/diagrams/coordinate-due-diligence-case-skill-diagram.png",
       "bytes": 1234136,
-      "sha256": "7b93758840061c8617ce221120e36d1f3607319181d7b704da77e18265abfa64"
+      "sha256": "7b93758840061c8617ce221120e36d1f3607319181d7b704da77e18265abfa64",
+      "sourceSha256": "7b93758840061c8617ce221120e36d1f3607319181d7b704da77e18265abfa64"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/diagrams/diagram-quality-log.md",
       "bytes": 1276,
-      "sha256": "53dbe0f4ec07e6cf7039e14d631445664e3c7a5749b057db87eb8cdf25e8803a"
+      "sha256": "53dbe0f4ec07e6cf7039e14d631445664e3c7a5749b057db87eb8cdf25e8803a",
+      "sourceSha256": "53dbe0f4ec07e6cf7039e14d631445664e3c7a5749b057db87eb8cdf25e8803a"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/quality-gates.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/quality-gates.md",
       "bytes": 755,
-      "sha256": "9024e1369d89fdc76c043a432f1cd789b669d6e2a1a74d0a01089b9282c1d162"
+      "sha256": "9024e1369d89fdc76c043a432f1cd789b669d6e2a1a74d0a01089b9282c1d162",
+      "sourceSha256": "9024e1369d89fdc76c043a432f1cd789b669d6e2a1a74d0a01089b9282c1d162"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/routing-model.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/routing-model.md",
       "bytes": 765,
-      "sha256": "e5f10a9d9f55b2234fc3c950c8be65e3d279b4707b2f984000aeea5265569220"
+      "sha256": "e5f10a9d9f55b2234fc3c950c8be65e3d279b4707b2f984000aeea5265569220",
+      "sourceSha256": "e5f10a9d9f55b2234fc3c950c8be65e3d279b4707b2f984000aeea5265569220"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/source-map.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/source-map.md",
       "bytes": 767,
-      "sha256": "6f3e6c169e37681c0a9557c4af5759276d829dc0fcfacb75b57b46472430ba30"
+      "sha256": "6f3e6c169e37681c0a9557c4af5759276d829dc0fcfacb75b57b46472430ba30",
+      "sourceSha256": "6f3e6c169e37681c0a9557c4af5759276d829dc0fcfacb75b57b46472430ba30"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/references/workflow-specification.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/references/workflow-specification.md",
       "bytes": 2525,
-      "sha256": "9f8296802a5ef1246f9033c34e7e5a0e385abf0e040b2016c26394c36b714022"
+      "sha256": "9f8296802a5ef1246f9033c34e7e5a0e385abf0e040b2016c26394c36b714022",
+      "sourceSha256": "9f8296802a5ef1246f9033c34e7e5a0e385abf0e040b2016c26394c36b714022"
     },
     {
       "source": "Portfolio Reference/skills/coordinate-due-diligence-case/SKILL.md",
       "destination": "portfolio-evidence/skills/coordinate-due-diligence-case/SKILL.md",
       "bytes": 3206,
-      "sha256": "e73e9ba61d39da10d9bcb5412659e1bd2f558cfaa7183e9dbecfd17d3c20e674"
+      "sha256": "e73e9ba61d39da10d9bcb5412659e1bd2f558cfaa7183e9dbecfd17d3c20e674",
+      "sourceSha256": "e73e9ba61d39da10d9bcb5412659e1bd2f558cfaa7183e9dbecfd17d3c20e674"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/agents/openai.yaml",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/agents/openai.yaml",
-      "bytes": 297,
-      "sha256": "149c6fd3a867d205c94a21be6c8053490bd128a898ad1771b261678f7222e568"
+      "bytes": 295,
+      "sha256": "537d753fc7d23c2ccaf44506e4b0886c8209e518a3f81cd837f8669833fbe7da",
+      "sourceSha256": "149c6fd3a867d205c94a21be6c8053490bd128a898ad1771b261678f7222e568",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/README.md",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/README.md",
       "bytes": 304,
-      "sha256": "899dc8dc98158bf877c093a8c9d7fd1108f61a6fef78f5c7468e6750f61fd25d"
+      "sha256": "899dc8dc98158bf877c093a8c9d7fd1108f61a6fef78f5c7468e6750f61fd25d",
+      "sourceSha256": "899dc8dc98158bf877c093a8c9d7fd1108f61a6fef78f5c7468e6750f61fd25d"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/references/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/references/diagrams/diagram-quality-log.md",
       "bytes": 1310,
-      "sha256": "e805d48613ea0c0f31df8c10a7856b6fcddeeeec23dd6cc3285aad66347ab7c8"
+      "sha256": "e805d48613ea0c0f31df8c10a7856b6fcddeeeec23dd6cc3285aad66347ab7c8",
+      "sourceSha256": "e805d48613ea0c0f31df8c10a7856b6fcddeeeec23dd6cc3285aad66347ab7c8"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/references/diagrams/gate-assessment-evidence-skill-diagram.excalidraw",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/references/diagrams/gate-assessment-evidence-skill-diagram.excalidraw",
       "bytes": 41467,
-      "sha256": "1f1bfdae5e55ec4317b196f0d10534a4a7ac087d88e4b3d37398b45dfce2d2bc"
+      "sha256": "1f1bfdae5e55ec4317b196f0d10534a4a7ac087d88e4b3d37398b45dfce2d2bc",
+      "sourceSha256": "1f1bfdae5e55ec4317b196f0d10534a4a7ac087d88e4b3d37398b45dfce2d2bc"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/references/diagrams/gate-assessment-evidence-skill-diagram.png",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/references/diagrams/gate-assessment-evidence-skill-diagram.png",
       "bytes": 1196148,
-      "sha256": "538791c6ef1dafb7bb5627f922d870d0f62a1fad95541e3450e710775e73c025"
+      "sha256": "538791c6ef1dafb7bb5627f922d870d0f62a1fad95541e3450e710775e73c025",
+      "sourceSha256": "538791c6ef1dafb7bb5627f922d870d0f62a1fad95541e3450e710775e73c025"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/references/gate-model.md",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/references/gate-model.md",
       "bytes": 565,
-      "sha256": "0fb574bdbb36756ba84e9d732cfb78779b71508335f3131f94335ff78bad7679"
+      "sha256": "0fb574bdbb36756ba84e9d732cfb78779b71508335f3131f94335ff78bad7679",
+      "sourceSha256": "0fb574bdbb36756ba84e9d732cfb78779b71508335f3131f94335ff78bad7679"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/references/source-map.md",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/references/source-map.md",
       "bytes": 625,
-      "sha256": "a29e809bde008f30528fd583e16960266b9a0d7233674398032e33386e8436e2"
+      "sha256": "a29e809bde008f30528fd583e16960266b9a0d7233674398032e33386e8436e2",
+      "sourceSha256": "a29e809bde008f30528fd583e16960266b9a0d7233674398032e33386e8436e2"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/references/workflow-specification.md",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/references/workflow-specification.md",
       "bytes": 2503,
-      "sha256": "5aae0230a56d61d231f62e65d65cebd795ab38c2720cf007bfd9282066c3ba6a"
+      "sha256": "5aae0230a56d61d231f62e65d65cebd795ab38c2720cf007bfd9282066c3ba6a",
+      "sourceSha256": "5aae0230a56d61d231f62e65d65cebd795ab38c2720cf007bfd9282066c3ba6a"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/scripts/check_readiness.py",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/scripts/check_readiness.py",
       "bytes": 2169,
-      "sha256": "6811b3216178428897403eff9a61f4ace7e9b824d5488da9ac73ab71abd788b9"
+      "sha256": "6811b3216178428897403eff9a61f4ace7e9b824d5488da9ac73ab71abd788b9",
+      "sourceSha256": "6811b3216178428897403eff9a61f4ace7e9b824d5488da9ac73ab71abd788b9"
     },
     {
       "source": "Portfolio Reference/skills/gate-assessment-evidence/SKILL.md",
       "destination": "portfolio-evidence/skills/gate-assessment-evidence/SKILL.md",
       "bytes": 2901,
-      "sha256": "d47f027f25467cb7a8f83a312ebde6415e62f12147ad54c2f2c3fbff046bf6bd"
+      "sha256": "d47f027f25467cb7a8f83a312ebde6415e62f12147ad54c2f2c3fbff046bf6bd",
+      "sourceSha256": "d47f027f25467cb7a8f83a312ebde6415e62f12147ad54c2f2c3fbff046bf6bd"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/agents/openai.yaml",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/agents/openai.yaml",
-      "bytes": 337,
-      "sha256": "e809969705636ffad8790ded1bb45ee47e305aac4208763a9d99166be1ba9823"
+      "bytes": 335,
+      "sha256": "7a7dde2eb59079517aed5a63a588cd156b5aeb74c2f8f09efc75b9ecc388d550",
+      "sourceSha256": "e809969705636ffad8790ded1bb45ee47e305aac4208763a9d99166be1ba9823",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/README.md",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/README.md",
       "bytes": 332,
-      "sha256": "d9f2a8246a870c3258399f82ba8a3169449fbed88dee89280963a752c30516bd"
+      "sha256": "d9f2a8246a870c3258399f82ba8a3169449fbed88dee89280963a752c30516bd",
+      "sourceSha256": "d9f2a8246a870c3258399f82ba8a3169449fbed88dee89280963a752c30516bd"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/references/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/references/diagrams/diagram-quality-log.md",
       "bytes": 1279,
-      "sha256": "2b98b547dcdb748fd80beadc47e73a34599a551e0319efaef44121d08dd84a88"
+      "sha256": "2b98b547dcdb748fd80beadc47e73a34599a551e0319efaef44121d08dd84a88",
+      "sourceSha256": "2b98b547dcdb748fd80beadc47e73a34599a551e0319efaef44121d08dd84a88"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/references/diagrams/governed-contract-evaluation-skill-diagram.excalidraw",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/references/diagrams/governed-contract-evaluation-skill-diagram.excalidraw",
       "bytes": 41405,
-      "sha256": "f6cc5e06d2935ec1ea9f0c54269022d42c8cc802c70895d91ff56da21a884ebf"
+      "sha256": "f6cc5e06d2935ec1ea9f0c54269022d42c8cc802c70895d91ff56da21a884ebf",
+      "sourceSha256": "f6cc5e06d2935ec1ea9f0c54269022d42c8cc802c70895d91ff56da21a884ebf"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/references/diagrams/governed-contract-evaluation-skill-diagram.png",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/references/diagrams/governed-contract-evaluation-skill-diagram.png",
       "bytes": 1213505,
-      "sha256": "26c0ed256e0c274b2d0a43b222b64bdf80c6a363abc3293716c79428ce480a79"
+      "sha256": "26c0ed256e0c274b2d0a43b222b64bdf80c6a363abc3293716c79428ce480a79",
+      "sourceSha256": "26c0ed256e0c274b2d0a43b222b64bdf80c6a363abc3293716c79428ce480a79"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/references/evaluation-protocol.md",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/references/evaluation-protocol.md",
       "bytes": 984,
-      "sha256": "224292640d56d6cdfb9dd3a6d3acf4cc6976ab0d5674e73415baa534e642227e"
+      "sha256": "224292640d56d6cdfb9dd3a6d3acf4cc6976ab0d5674e73415baa534e642227e",
+      "sourceSha256": "224292640d56d6cdfb9dd3a6d3acf4cc6976ab0d5674e73415baa534e642227e"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/references/source-map.md",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/references/source-map.md",
       "bytes": 481,
-      "sha256": "58d8ce73db0380e14870ef44fd8b9d04aaeb1d4da58247c9127c94cb6d315dc7"
+      "sha256": "58d8ce73db0380e14870ef44fd8b9d04aaeb1d4da58247c9127c94cb6d315dc7",
+      "sourceSha256": "58d8ce73db0380e14870ef44fd8b9d04aaeb1d4da58247c9127c94cb6d315dc7"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/references/workflow-specification.md",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/references/workflow-specification.md",
       "bytes": 2660,
-      "sha256": "c4a369ed8d6004c793addaa2763d14cc320bdbbf7bbeca3fcf8f4065ff6cf03d"
+      "sha256": "c4a369ed8d6004c793addaa2763d14cc320bdbbf7bbeca3fcf8f4065ff6cf03d",
+      "sourceSha256": "c4a369ed8d6004c793addaa2763d14cc320bdbbf7bbeca3fcf8f4065ff6cf03d"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/scripts/evaluation_metrics.py",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/scripts/evaluation_metrics.py",
       "bytes": 2523,
-      "sha256": "4f83b9c79bcafb9030d6f1ee2aea873dea4f34bb04eb12e119871c77f7c6a1fc"
+      "sha256": "4f83b9c79bcafb9030d6f1ee2aea873dea4f34bb04eb12e119871c77f7c6a1fc",
+      "sourceSha256": "4f83b9c79bcafb9030d6f1ee2aea873dea4f34bb04eb12e119871c77f7c6a1fc"
     },
     {
       "source": "Portfolio Reference/skills/governed-contract-evaluation/SKILL.md",
       "destination": "portfolio-evidence/skills/governed-contract-evaluation/SKILL.md",
       "bytes": 2206,
-      "sha256": "22f81e79dce34cee93d17e4948e2da33f7854b8531990c26f3ca66f75dec5add"
+      "sha256": "22f81e79dce34cee93d17e4948e2da33f7854b8531990c26f3ca66f75dec5add",
+      "sourceSha256": "22f81e79dce34cee93d17e4948e2da33f7854b8531990c26f3ca66f75dec5add"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/agents/openai.yaml",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/agents/openai.yaml",
-      "bytes": 297,
-      "sha256": "d945a8771a365bf9fbeecb03284502b6689c368ca4834a118e33c32b68405c0a"
+      "bytes": 295,
+      "sha256": "0c8c9bb88531000ad5a41c3c5e738865f7495b491e6a763aabd6cf1f2198ca3c",
+      "sourceSha256": "d945a8771a365bf9fbeecb03284502b6689c368ca4834a118e33c32b68405c0a",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/README.md",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/README.md",
       "bytes": 329,
-      "sha256": "0128ec4fa941a72164c8a67f3125dc40f9c2eb68bd034685067105420476198e"
+      "sha256": "0128ec4fa941a72164c8a67f3125dc40f9c2eb68bd034685067105420476198e",
+      "sourceSha256": "0128ec4fa941a72164c8a67f3125dc40f9c2eb68bd034685067105420476198e"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/references/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/references/diagrams/diagram-quality-log.md",
       "bytes": 1337,
-      "sha256": "c04625396575f24caffc1fc6e36437f0cbdae6ca088c0a23b1f743a5f09d82ff"
+      "sha256": "c04625396575f24caffc1fc6e36437f0cbdae6ca088c0a23b1f743a5f09d82ff",
+      "sourceSha256": "c04625396575f24caffc1fc6e36437f0cbdae6ca088c0a23b1f743a5f09d82ff"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/references/diagrams/orchestrate-decision-council-skill-diagram.excalidraw",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/references/diagrams/orchestrate-decision-council-skill-diagram.excalidraw",
       "bytes": 40969,
-      "sha256": "a5ffe98f2f2c9b59e4dd1b20531335e9af75d1c1ae8d0c072cba3e93b39fb0b1"
+      "sha256": "a5ffe98f2f2c9b59e4dd1b20531335e9af75d1c1ae8d0c072cba3e93b39fb0b1",
+      "sourceSha256": "a5ffe98f2f2c9b59e4dd1b20531335e9af75d1c1ae8d0c072cba3e93b39fb0b1"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/references/diagrams/orchestrate-decision-council-skill-diagram.png",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/references/diagrams/orchestrate-decision-council-skill-diagram.png",
       "bytes": 1209177,
-      "sha256": "36a43e46db7e42e12a6b32a2e97f390244c226b27b3d8e20949867ab56dec1ad"
+      "sha256": "36a43e46db7e42e12a6b32a2e97f390244c226b27b3d8e20949867ab56dec1ad",
+      "sourceSha256": "36a43e46db7e42e12a6b32a2e97f390244c226b27b3d8e20949867ab56dec1ad"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/references/output-shapes.md",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/references/output-shapes.md",
       "bytes": 608,
-      "sha256": "48a5c3fb6d82399ca2073e9c3e11f910bcac9ee66a4f351de358b9d8e8b1a016"
+      "sha256": "48a5c3fb6d82399ca2073e9c3e11f910bcac9ee66a4f351de358b9d8e8b1a016",
+      "sourceSha256": "48a5c3fb6d82399ca2073e9c3e11f910bcac9ee66a4f351de358b9d8e8b1a016"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/references/source-map.md",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/references/source-map.md",
       "bytes": 608,
-      "sha256": "297e3f7de73e1194f7961e90630831ac4538cd6be6c0b7c32b0fe3c1e5b0f900"
+      "sha256": "297e3f7de73e1194f7961e90630831ac4538cd6be6c0b7c32b0fe3c1e5b0f900",
+      "sourceSha256": "297e3f7de73e1194f7961e90630831ac4538cd6be6c0b7c32b0fe3c1e5b0f900"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/references/workflow-specification.md",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/references/workflow-specification.md",
       "bytes": 2552,
-      "sha256": "c38a92e24688cba9f8c4b185680f3cd4eee88c5b657633f1ea0a9c62c0e675a0"
+      "sha256": "c38a92e24688cba9f8c4b185680f3cd4eee88c5b657633f1ea0a9c62c0e675a0",
+      "sourceSha256": "c38a92e24688cba9f8c4b185680f3cd4eee88c5b657633f1ea0a9c62c0e675a0"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/scripts/build_decision_brief.py",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/scripts/build_decision_brief.py",
       "bytes": 1916,
-      "sha256": "c840ab2ae1b596a20d514cda684c6493b783e93c932a1c6ad285e715739772ab"
+      "sha256": "c840ab2ae1b596a20d514cda684c6493b783e93c932a1c6ad285e715739772ab",
+      "sourceSha256": "c840ab2ae1b596a20d514cda684c6493b783e93c932a1c6ad285e715739772ab"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/scripts/select_seats.py",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/scripts/select_seats.py",
       "bytes": 1594,
-      "sha256": "af751a228f1680413f639e44254982e8f3362d55a6febe40cb5e8fef05f62acd"
+      "sha256": "af751a228f1680413f639e44254982e8f3362d55a6febe40cb5e8fef05f62acd",
+      "sourceSha256": "af751a228f1680413f639e44254982e8f3362d55a6febe40cb5e8fef05f62acd"
     },
     {
       "source": "Portfolio Reference/skills/orchestrate-decision-council/SKILL.md",
       "destination": "portfolio-evidence/skills/orchestrate-decision-council/SKILL.md",
       "bytes": 3025,
-      "sha256": "89e497313fc9fee4837902bb2ddc463d33ef18ea2631c37fcd623e271166a7ee"
+      "sha256": "89e497313fc9fee4837902bb2ddc463d33ef18ea2631c37fcd623e271166a7ee",
+      "sourceSha256": "89e497313fc9fee4837902bb2ddc463d33ef18ea2631c37fcd623e271166a7ee"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/diagrams/advice-document-production-v2.excalidraw",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/diagrams/advice-document-production-v2.excalidraw",
       "bytes": 46518,
-      "sha256": "d8e5775ea93dfc27ce7d56132ff4e1a907e0213ff5d63e136bf0a8fc9ebe3c2b"
+      "sha256": "d8e5775ea93dfc27ce7d56132ff4e1a907e0213ff5d63e136bf0a8fc9ebe3c2b",
+      "sourceSha256": "d8e5775ea93dfc27ce7d56132ff4e1a907e0213ff5d63e136bf0a8fc9ebe3c2b"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/diagrams/advice-document-production-v2.png",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/diagrams/advice-document-production-v2.png",
       "bytes": 1357665,
-      "sha256": "9f3388bb12af7c70cda06101485076b2968cff65922a5653ea5546fc197c216e"
+      "sha256": "9f3388bb12af7c70cda06101485076b2968cff65922a5653ea5546fc197c216e",
+      "sourceSha256": "9f3388bb12af7c70cda06101485076b2968cff65922a5653ea5546fc197c216e"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/diagrams/advice-quality-decision-tree.excalidraw",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/diagrams/advice-quality-decision-tree.excalidraw",
       "bytes": 58928,
-      "sha256": "952171f18c3ec821328b3bd7fabc5faa01bd30400d7b3bf61a29d33f9a390d55"
+      "sha256": "952171f18c3ec821328b3bd7fabc5faa01bd30400d7b3bf61a29d33f9a390d55",
+      "sourceSha256": "952171f18c3ec821328b3bd7fabc5faa01bd30400d7b3bf61a29d33f9a390d55"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/diagrams/advice-quality-decision-tree.png",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/diagrams/advice-quality-decision-tree.png",
       "bytes": 1180644,
-      "sha256": "b638cb6b289cf2a5d2e5f65d5790ecabf1365952d9d33796f0a404429457ba7b"
+      "sha256": "b638cb6b289cf2a5d2e5f65d5790ecabf1365952d9d33796f0a404429457ba7b",
+      "sourceSha256": "b638cb6b289cf2a5d2e5f65d5790ecabf1365952d9d33796f0a404429457ba7b"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/diagrams/diagram-quality-log.md",
       "bytes": 5369,
-      "sha256": "86f69019f450d4c7703932c7838f82b00602fdbbddf56cf9a41fae5a81f39b9b"
+      "sha256": "86f69019f450d4c7703932c7838f82b00602fdbbddf56cf9a41fae5a81f39b9b",
+      "sourceSha256": "86f69019f450d4c7703932c7838f82b00602fdbbddf56cf9a41fae5a81f39b9b"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/quality-control-specification.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/quality-control-specification.md",
       "bytes": 3075,
-      "sha256": "8e71d64511749b665f15114cb709ef0bf80bbcec8f0dc4f8b1335d7ddf6d8b57"
+      "sha256": "8e71d64511749b665f15114cb709ef0bf80bbcec8f0dc4f8b1335d7ddf6d8b57",
+      "sourceSha256": "8e71d64511749b665f15114cb709ef0bf80bbcec8f0dc4f8b1335d7ddf6d8b57"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/source-map.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/source-map.md",
       "bytes": 692,
-      "sha256": "799f67d9650f5cda5d89223ad267ce94af7cc33e7c6e609d109df2f4caa7c22b"
+      "sha256": "799f67d9650f5cda5d89223ad267ce94af7cc33e7c6e609d109df2f4caa7c22b",
+      "sourceSha256": "799f67d9650f5cda5d89223ad267ce94af7cc33e7c6e609d109df2f4caa7c22b"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/evidence/workflow-specification.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/evidence/workflow-specification.md",
       "bytes": 8758,
-      "sha256": "808b7fcf45fab1db8916b9947ebbbb251ea482c344272d8b7fe7a0e9c3705f9d"
+      "sha256": "808b7fcf45fab1db8916b9947ebbbb251ea482c344272d8b7fe7a0e9c3705f9d",
+      "sourceSha256": "808b7fcf45fab1db8916b9947ebbbb251ea482c344272d8b7fe7a0e9c3705f9d"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/instructions/end-to-end-client-delivery.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/instructions/end-to-end-client-delivery.md",
       "bytes": 4800,
-      "sha256": "87f4cadf897dba45416686b7bdd367ff2bb930a175bc001271188c6e48b7ebb7"
+      "sha256": "87f4cadf897dba45416686b7bdd367ff2bb930a175bc001271188c6e48b7ebb7",
+      "sourceSha256": "87f4cadf897dba45416686b7bdd367ff2bb930a175bc001271188c6e48b7ebb7"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/instructions/pipeline-and-release-controls.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/instructions/pipeline-and-release-controls.md",
       "bytes": 1347,
-      "sha256": "eda1d1e613a6e4f23967f90414af33518d23b8aac8e46237c4bf8d060091af31"
+      "sha256": "eda1d1e613a6e4f23967f90414af33518d23b8aac8e46237c4bf8d060091af31",
+      "sourceSha256": "eda1d1e613a6e4f23967f90414af33518d23b8aac8e46237c4bf8d060091af31"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/README.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/README.md",
       "bytes": 6865,
-      "sha256": "e9af1855962b1254162928905783a685365c7d036ea5ac3208d49aae506eef0b"
+      "sha256": "e9af1855962b1254162928905783a685365c7d036ea5ac3208d49aae506eef0b",
+      "sourceSha256": "e9af1855962b1254162928905783a685365c7d036ea5ac3208d49aae506eef0b"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/samples/presentation-output.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/samples/presentation-output.md",
       "bytes": 981,
-      "sha256": "2a4eb1b8cfa32120c4837d5eaf838db5fb39cc9573f17c184a251bb5c4f1392a"
+      "sha256": "2a4eb1b8cfa32120c4837d5eaf838db5fb39cc9573f17c184a251bb5c4f1392a",
+      "sourceSha256": "2a4eb1b8cfa32120c4837d5eaf838db5fb39cc9573f17c184a251bb5c4f1392a"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/samples/presentation-record.json",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/samples/presentation-record.json",
       "bytes": 685,
-      "sha256": "109a5a19ca97e66fe3894907689be9dda6d29632e3e21fa22d09c409d7378b5f"
+      "sha256": "109a5a19ca97e66fe3894907689be9dda6d29632e3e21fa22d09c409d7378b5f",
+      "sourceSha256": "109a5a19ca97e66fe3894907689be9dda6d29632e3e21fa22d09c409d7378b5f"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/src/document_qa.py",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/src/document_qa.py",
       "bytes": 2304,
-      "sha256": "80763cf019c03fe1dabcd10ccb2877155ff0d6a618f23b046990ad57535f5c2f"
+      "sha256": "80763cf019c03fe1dabcd10ccb2877155ff0d6a618f23b046990ad57535f5c2f",
+      "sourceSha256": "80763cf019c03fe1dabcd10ccb2877155ff0d6a618f23b046990ad57535f5c2f"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/src/template_engine.py",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/src/template_engine.py",
       "bytes": 1700,
-      "sha256": "208f041fd232b678c6841751fac1257d6d9aac39d8fb5f6b98b7f7f041cbcf51"
+      "sha256": "208f041fd232b678c6841751fac1257d6d9aac39d8fb5f6b98b7f7f041cbcf51",
+      "sourceSha256": "208f041fd232b678c6841751fac1257d6d9aac39d8fb5f6b98b7f7f041cbcf51"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/tests/test_document_qa.py",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/tests/test_document_qa.py",
       "bytes": 933,
-      "sha256": "1ffeac379302ef50e952ce437d7ab8dd8a4e52ce5b62a505ee7a39522e1890e9"
+      "sha256": "1ffeac379302ef50e952ce437d7ab8dd8a4e52ce5b62a505ee7a39522e1890e9",
+      "sourceSha256": "1ffeac379302ef50e952ce437d7ab8dd8a4e52ce5b62a505ee7a39522e1890e9"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/tests/test_template_engine.py",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/tests/test_template_engine.py",
       "bytes": 949,
-      "sha256": "b17050dd48f43b9e7fc05cb214a95307140d3fe460074d1d637f290539877df5"
+      "sha256": "b17050dd48f43b9e7fc05cb214a95307140d3fe460074d1d637f290539877df5",
+      "sourceSha256": "b17050dd48f43b9e7fc05cb214a95307140d3fe460074d1d637f290539877df5"
     },
     {
       "source": "Portfolio Reference/workflows/advice-document-pipeline/tests/test-receipt.md",
       "destination": "portfolio-evidence/workflows/advice-document-pipeline/tests/test-receipt.md",
       "bytes": 784,
-      "sha256": "81e8eeb74b3a207035959752dda157dc82ab2a8c0d4782af9b40457936bb9b51"
+      "sha256": "81e8eeb74b3a207035959752dda157dc82ab2a8c0d4782af9b40457936bb9b51",
+      "sourceSha256": "81e8eeb74b3a207035959752dda157dc82ab2a8c0d4782af9b40457936bb9b51"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/diagrams/ai-content-and-seo-system-workflow-diagram.excalidraw",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/diagrams/ai-content-and-seo-system-workflow-diagram.excalidraw",
       "bytes": 41311,
-      "sha256": "5e6e2abdb9f5120bfdd39d8323229476211642c3814f783f34102cb5b13e8087"
+      "sha256": "5e6e2abdb9f5120bfdd39d8323229476211642c3814f783f34102cb5b13e8087",
+      "sourceSha256": "5e6e2abdb9f5120bfdd39d8323229476211642c3814f783f34102cb5b13e8087"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/diagrams/ai-content-and-seo-system-workflow-diagram.png",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/diagrams/ai-content-and-seo-system-workflow-diagram.png",
       "bytes": 1160230,
-      "sha256": "79064691f04f8ee2e024ea8e6559dbe7c7129ea259f04a1950be9e4a5a40f606"
+      "sha256": "79064691f04f8ee2e024ea8e6559dbe7c7129ea259f04a1950be9e4a5a40f606",
+      "sourceSha256": "79064691f04f8ee2e024ea8e6559dbe7c7129ea259f04a1950be9e4a5a40f606"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/diagrams/content-publishing-quality-decision-tree.excalidraw",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/diagrams/content-publishing-quality-decision-tree.excalidraw",
       "bytes": 58760,
-      "sha256": "d588aec00fa1fdb08e85bd95b37b0514f3978a8d9db9cbabce847142829dc4aa"
+      "sha256": "d588aec00fa1fdb08e85bd95b37b0514f3978a8d9db9cbabce847142829dc4aa",
+      "sourceSha256": "d588aec00fa1fdb08e85bd95b37b0514f3978a8d9db9cbabce847142829dc4aa"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/diagrams/content-publishing-quality-decision-tree.png",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/diagrams/content-publishing-quality-decision-tree.png",
       "bytes": 1146938,
-      "sha256": "617acd607d4ac512ad940b0096a4a8f6ccfa9aa3e2d736ca8c01d807bf4d2df0"
+      "sha256": "617acd607d4ac512ad940b0096a4a8f6ccfa9aa3e2d736ca8c01d807bf4d2df0",
+      "sourceSha256": "617acd607d4ac512ad940b0096a4a8f6ccfa9aa3e2d736ca8c01d807bf4d2df0"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/diagrams/diagram-quality-log.md",
       "bytes": 1665,
-      "sha256": "fccc841f5e0244e03689569381ec71b9db514dedf7ad9d68af8acc0de533a2db"
+      "sha256": "fccc841f5e0244e03689569381ec71b9db514dedf7ad9d68af8acc0de533a2db",
+      "sourceSha256": "fccc841f5e0244e03689569381ec71b9db514dedf7ad9d68af8acc0de533a2db"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/quality-control-specification.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/quality-control-specification.md",
       "bytes": 2861,
-      "sha256": "cbc2ee4809c36a5353d7ab907f9599364b77f8a629cc51579bc77fe87f51e5e1"
+      "sha256": "cbc2ee4809c36a5353d7ab907f9599364b77f8a629cc51579bc77fe87f51e5e1",
+      "sourceSha256": "cbc2ee4809c36a5353d7ab907f9599364b77f8a629cc51579bc77fe87f51e5e1"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/source-map.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/source-map.md",
       "bytes": 654,
-      "sha256": "afcea7c73ce3bb1fbb48295ea9d102505f3d110c450a3a2546bea029db1a9d68"
+      "sha256": "afcea7c73ce3bb1fbb48295ea9d102505f3d110c450a3a2546bea029db1a9d68",
+      "sourceSha256": "afcea7c73ce3bb1fbb48295ea9d102505f3d110c450a3a2546bea029db1a9d68"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/evidence/workflow-specification.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/evidence/workflow-specification.md",
       "bytes": 2440,
-      "sha256": "7ae12a8f56a53da97e21f565424b2dcd2773bcac2dd424b7a1d1e4398980785f"
+      "sha256": "7ae12a8f56a53da97e21f565424b2dcd2773bcac2dd424b7a1d1e4398980785f",
+      "sourceSha256": "7ae12a8f56a53da97e21f565424b2dcd2773bcac2dd424b7a1d1e4398980785f"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/instructions/article-operations.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/instructions/article-operations.md",
       "bytes": 808,
-      "sha256": "ca4fd053c2bbaede62432f0357411aefe71b29165b3b955e9a7c0b1278c9342e"
+      "sha256": "ca4fd053c2bbaede62432f0357411aefe71b29165b3b955e9a7c0b1278c9342e",
+      "sourceSha256": "ca4fd053c2bbaede62432f0357411aefe71b29165b3b955e9a7c0b1278c9342e"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/instructions/editorial-gates.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/instructions/editorial-gates.md",
       "bytes": 858,
-      "sha256": "56967195994e3c7a563249cc9d29c1f8ad3da3214f46a82d7bd34b1ee1540020"
+      "sha256": "56967195994e3c7a563249cc9d29c1f8ad3da3214f46a82d7bd34b1ee1540020",
+      "sourceSha256": "56967195994e3c7a563249cc9d29c1f8ad3da3214f46a82d7bd34b1ee1540020"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/README.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/README.md",
       "bytes": 4429,
-      "sha256": "749d30912f0d632501be3efe1d91c297c96fadcff0a0f2a45229edfa4935cf56"
+      "sha256": "749d30912f0d632501be3efe1d91c297c96fadcff0a0f2a45229edfa4935cf56",
+      "sourceSha256": "749d30912f0d632501be3efe1d91c297c96fadcff0a0f2a45229edfa4935cf56"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/samples/article-visual-brand.json",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/samples/article-visual-brand.json",
       "bytes": 1138,
-      "sha256": "eecf56f95ccd8c67ad664ea9ef8199dbef9addb780953dd42398d6bea40a3a25"
+      "sha256": "eecf56f95ccd8c67ad664ea9ef8199dbef9addb780953dd42398d6bea40a3a25",
+      "sourceSha256": "eecf56f95ccd8c67ad664ea9ef8199dbef9addb780953dd42398d6bea40a3a25"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/samples/seo-issue-to-action-sample.md",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/samples/seo-issue-to-action-sample.md",
       "bytes": 1465,
-      "sha256": "5d4939e7609f483b41105efb1ffb37c092d2d99dfb11e017f102b1605bf7f772"
+      "sha256": "5d4939e7609f483b41105efb1ffb37c092d2d99dfb11e017f102b1605bf7f772",
+      "sourceSha256": "5d4939e7609f483b41105efb1ffb37c092d2d99dfb11e017f102b1605bf7f772"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/src/article_visual_starter_lib.py",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/src/article_visual_starter_lib.py",
       "bytes": 15011,
-      "sha256": "11f0849c40ccf30cd8ba7beaf46a6bd46e4a9470aba91bf6ccabedf596c8e90b"
+      "sha256": "11f0849c40ccf30cd8ba7beaf46a6bd46e4a9470aba91bf6ccabedf596c8e90b",
+      "sourceSha256": "11f0849c40ccf30cd8ba7beaf46a6bd46e4a9470aba91bf6ccabedf596c8e90b"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/src/create_article_v2.py",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/src/create_article_v2.py",
       "bytes": 14850,
-      "sha256": "e95194d69d6b0bb7d093fab29bca8cf9a5341c26c8d1e7215837343dbb0ecf1a"
+      "sha256": "e95194d69d6b0bb7d093fab29bca8cf9a5341c26c8d1e7215837343dbb0ecf1a",
+      "sourceSha256": "e95194d69d6b0bb7d093fab29bca8cf9a5341c26c8d1e7215837343dbb0ecf1a"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/src/generate_article_visuals.py",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/src/generate_article_visuals.py",
       "bytes": 1299,
-      "sha256": "6d75b896888c5f2549be76ed3547371bb5ee7a4c12bb86ddc7c7bc80124639f8"
+      "sha256": "6d75b896888c5f2549be76ed3547371bb5ee7a4c12bb86ddc7c7bc80124639f8",
+      "sourceSha256": "6d75b896888c5f2549be76ed3547371bb5ee7a4c12bb86ddc7c7bc80124639f8"
     },
     {
       "source": "Portfolio Reference/workflows/ai-content-and-seo-system/src/sync_yoast_frontmatter.py",
       "destination": "portfolio-evidence/workflows/ai-content-and-seo-system/src/sync_yoast_frontmatter.py",
       "bytes": 5057,
-      "sha256": "861382924e6e34c1364771f97a8c6f543a339b79c76ad9d15fcb54396999b9df"
+      "sha256": "861382924e6e34c1364771f97a8c6f543a339b79c76ad9d15fcb54396999b9df",
+      "sourceSha256": "861382924e6e34c1364771f97a8c6f543a339b79c76ad9d15fcb54396999b9df"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/diagrams/assessment-automation-workflow-diagram.excalidraw",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/diagrams/assessment-automation-workflow-diagram.excalidraw",
       "bytes": 44486,
-      "sha256": "fc70591be04ecf05904a4fba4f19defa7110ada4af73841a9bec61b750ed95d6"
+      "sha256": "fc70591be04ecf05904a4fba4f19defa7110ada4af73841a9bec61b750ed95d6",
+      "sourceSha256": "fc70591be04ecf05904a4fba4f19defa7110ada4af73841a9bec61b750ed95d6"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/diagrams/assessment-automation-workflow-diagram.png",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/diagrams/assessment-automation-workflow-diagram.png",
       "bytes": 1266859,
-      "sha256": "7ae1011f90e643ddf01f766cdf6431e638f8f65820a437e55dc6fef123c482f3"
+      "sha256": "7ae1011f90e643ddf01f766cdf6431e638f8f65820a437e55dc6fef123c482f3",
+      "sourceSha256": "7ae1011f90e643ddf01f766cdf6431e638f8f65820a437e55dc6fef123c482f3"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/diagrams/assessment-quality-decision-tree.excalidraw",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/diagrams/assessment-quality-decision-tree.excalidraw",
       "bytes": 58724,
-      "sha256": "375ca55166804472437b5551a63a7fc3c8f9581f0c28eca9bae1bb92386bb07f"
+      "sha256": "375ca55166804472437b5551a63a7fc3c8f9581f0c28eca9bae1bb92386bb07f",
+      "sourceSha256": "375ca55166804472437b5551a63a7fc3c8f9581f0c28eca9bae1bb92386bb07f"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/diagrams/assessment-quality-decision-tree.png",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/diagrams/assessment-quality-decision-tree.png",
       "bytes": 1131139,
-      "sha256": "b154138d5c763cc2ee6282e133cce40d20a8fb2e323d07b66fb0c6aea77c61b4"
+      "sha256": "b154138d5c763cc2ee6282e133cce40d20a8fb2e323d07b66fb0c6aea77c61b4",
+      "sourceSha256": "b154138d5c763cc2ee6282e133cce40d20a8fb2e323d07b66fb0c6aea77c61b4"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/diagrams/diagram-quality-log.md",
       "bytes": 2111,
-      "sha256": "0ff30f17e0e585757294b6351c64448fe3f3243befb331d2e67e4730f4cbb5d9"
+      "sha256": "0ff30f17e0e585757294b6351c64448fe3f3243befb331d2e67e4730f4cbb5d9",
+      "sourceSha256": "0ff30f17e0e585757294b6351c64448fe3f3243befb331d2e67e4730f4cbb5d9"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/quality-control-specification.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/quality-control-specification.md",
       "bytes": 3340,
-      "sha256": "b82b0c62c8f6c7a58077274093f7c6ec15cc9e036dd11310aab5258ba5366d8d"
+      "sha256": "b82b0c62c8f6c7a58077274093f7c6ec15cc9e036dd11310aab5258ba5366d8d",
+      "sourceSha256": "b82b0c62c8f6c7a58077274093f7c6ec15cc9e036dd11310aab5258ba5366d8d"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/source-map.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/source-map.md",
       "bytes": 1405,
-      "sha256": "53ab2546794bf070356fd917305756a28eccebc1facf587bbb8c253ce75770e8"
+      "sha256": "53ab2546794bf070356fd917305756a28eccebc1facf587bbb8c253ce75770e8",
+      "sourceSha256": "53ab2546794bf070356fd917305756a28eccebc1facf587bbb8c253ce75770e8"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/evidence/workflow-specification.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/evidence/workflow-specification.md",
       "bytes": 2452,
-      "sha256": "f6d79479deca5a4e3da3a26d4c2c63ca47e075e96533fe9ff025ec6bc272bf58"
+      "sha256": "f6d79479deca5a4e3da3a26d4c2c63ca47e075e96533fe9ff025ec6bc272bf58",
+      "sourceSha256": "f6d79479deca5a4e3da3a26d4c2c63ca47e075e96533fe9ff025ec6bc272bf58"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/instructions/ar-car-fund-lifecycle.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/instructions/ar-car-fund-lifecycle.md",
       "bytes": 7180,
-      "sha256": "72dba247733ca09a1ecdc927acd689bee7c3fd9980b703be144ef8139cde688b"
+      "sha256": "72dba247733ca09a1ecdc927acd689bee7c3fd9980b703be144ef8139cde688b",
+      "sourceSha256": "72dba247733ca09a1ecdc927acd689bee7c3fd9980b703be144ef8139cde688b"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/README.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/README.md",
       "bytes": 8310,
-      "sha256": "c925227323f92106a6cb397ecd384b25ce2da6c51ea48cf4644f500195014ecf"
+      "sha256": "c925227323f92106a6cb397ecd384b25ce2da6c51ea48cf4644f500195014ecf",
+      "sourceSha256": "c925227323f92106a6cb397ecd384b25ce2da6c51ea48cf4644f500195014ecf"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/samples/evidence-gap.md",
       "destination": "portfolio-evidence/workflows/assessment-automation/samples/evidence-gap.md",
       "bytes": 371,
-      "sha256": "81455328534f81a95ebf992f34e85a27d0db14fa0a5dee7bb3a303a36aa0defa"
+      "sha256": "81455328534f81a95ebf992f34e85a27d0db14fa0a5dee7bb3a303a36aa0defa",
+      "sourceSha256": "81455328534f81a95ebf992f34e85a27d0db14fa0a5dee7bb3a303a36aa0defa"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/samples/fictional-case.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/samples/fictional-case.json",
       "bytes": 290,
-      "sha256": "8b8be657f354bec2c53f532364452a4321bb3c083d7fc4abc7cbca405d519ddf"
+      "sha256": "8b8be657f354bec2c53f532364452a4321bb3c083d7fc4abc7cbca405d519ddf",
+      "sourceSha256": "8b8be657f354bec2c53f532364452a4321bb3c083d7fc4abc7cbca405d519ddf"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/src/stage_gate.py",
       "destination": "portfolio-evidence/workflows/assessment-automation/src/stage_gate.py",
       "bytes": 1211,
-      "sha256": "62c735680fff733dd034da9e194947933f9c442aeceea7bc005bb41c07d6e8b1"
+      "sha256": "62c735680fff733dd034da9e194947933f9c442aeceea7bc005bb41c07d6e8b1",
+      "sourceSha256": "62c735680fff733dd034da9e194947933f9c442aeceea7bc005bb41c07d6e8b1"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/tests/test_stage_gate.py",
       "destination": "portfolio-evidence/workflows/assessment-automation/tests/test_stage_gate.py",
       "bytes": 848,
-      "sha256": "1bba8e2fb1840f2e3526a870cc32ed6accd744a7c3e52a5e8dfbec03953859e4"
+      "sha256": "1bba8e2fb1840f2e3526a870cc32ed6accd744a7c3e52a5e8dfbec03953859e4",
+      "sourceSha256": "1bba8e2fb1840f2e3526a870cc32ed6accd744a7c3e52a5e8dfbec03953859e4"
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/async-report-runner.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/async-report-runner.workflow.json",
-      "bytes": 48830,
-      "sha256": "fc31f4ca377fb8a8d1a2d4210234f95e33ba296da1fda830669d20f194163c6f"
+      "bytes": 48026,
+      "sha256": "08dd3c7a19300a8ffc15f71ce58100c4b41a4e0081f6582c3a9065f2839318cc",
+      "sourceSha256": "fc31f4ca377fb8a8d1a2d4210234f95e33ba296da1fda830669d20f194163c6f",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/async-report-status.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/async-report-status.workflow.json",
-      "bytes": 3835,
-      "sha256": "ec48c2ad0a2ba2ee7e38da45658f740b15adbf6cdd0939bca302b111b44b7658"
+      "bytes": 3716,
+      "sha256": "ec6e1947d57fad5b5ee77a9497dec39b88bc4a0d297746347694df4532637239",
+      "sourceSha256": "ec48c2ad0a2ba2ee7e38da45658f740b15adbf6cdd0939bca302b111b44b7658",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/async-report-submit.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/async-report-submit.workflow.json",
-      "bytes": 7982,
-      "sha256": "fd5e4b9516539e5be3b0d9eb367033a70c97ae8a9692112c5b2729cadc903b87"
+      "bytes": 7722,
+      "sha256": "924a90e6267de6fe1df694d7e985685a13fa568d968b2f4e772d7f5fa2cf9039",
+      "sourceSha256": "fd5e4b9516539e5be3b0d9eb367033a70c97ae8a9692112c5b2729cadc903b87",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/document-batch-check.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/document-batch-check.workflow.json",
-      "bytes": 28986,
-      "sha256": "e1b97d24949cefacc756d743cb78b03313e733a802d2e372869d436115ffed92"
+      "bytes": 28356,
+      "sha256": "b316133e232eb6bdf54f1bfd7771646cd17397e94411d47932d8e8bdfa94cc72",
+      "sourceSha256": "e1b97d24949cefacc756d743cb78b03313e733a802d2e372869d436115ffed92",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/document-checklist.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/document-checklist.workflow.json",
-      "bytes": 10878,
-      "sha256": "1cd61e512829539a898a75c0953eb3b705d3bd8d7bd03872cafa3c1855cdc8db"
+      "bytes": 10700,
+      "sha256": "4f40b19833512c8af9848355f71aa31c53527ebf517651a60c01cd34ce38bbbe",
+      "sourceSha256": "1cd61e512829539a898a75c0953eb3b705d3bd8d7bd03872cafa3c1855cdc8db",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/evidence-gate.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/evidence-gate.workflow.json",
-      "bytes": 40094,
-      "sha256": "e6028194fafcfa475e987700702faacdd39d27b9b29f3de835bb868339a2516c"
+      "bytes": 39266,
+      "sha256": "474bc8c4602c57b0b3c7339f087a4559e1e4b8ceb587363fcb9770929ba6dde0",
+      "sourceSha256": "e6028194fafcfa475e987700702faacdd39d27b9b29f3de835bb868339a2516c",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/manual-signal-receiver.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/manual-signal-receiver.workflow.json",
-      "bytes": 17372,
-      "sha256": "a82ccc84b2bc8d76972e7f80849f307948530d9b2e78040819e02d71bd368b44"
+      "bytes": 16867,
+      "sha256": "e0d6b8b5c9ea958252550a38df0642e769c75e9c67ab0a2e1d4e6248e66ac308",
+      "sourceSha256": "a82ccc84b2bc8d76972e7f80849f307948530d9b2e78040819e02d71bd368b44",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/mcp-control-plane.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/mcp-control-plane.workflow.json",
-      "bytes": 28596,
-      "sha256": "aa73e1bd60bbd44f6fffa402f8c838e7872c85d492eb0fd4382a76e56784bdce"
+      "bytes": 27919,
+      "sha256": "58e257330faf65e035a581629f715afa12f3970d4eae7c39b21b1ac2c850f2f2",
+      "sourceSha256": "aa73e1bd60bbd44f6fffa402f8c838e7872c85d492eb0fd4382a76e56784bdce",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/research-agent-completion.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/research-agent-completion.workflow.json",
-      "bytes": 9515,
-      "sha256": "b3c0b504ae35ea517f596172c65815ebc0d90225d38c99e61a6c268ebae23091"
+      "bytes": 9252,
+      "sha256": "bbd1bc328e7620e3ec84514a4cbd78c8e11dfa013ca46d3e548c67b9ddf8f727",
+      "sourceSha256": "b3c0b504ae35ea517f596172c65815ebc0d90225d38c99e61a6c268ebae23091",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/research-agent-launcher.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/research-agent-launcher.workflow.json",
-      "bytes": 17122,
-      "sha256": "26acd068db2067e5bfc148ee4445bd0efdbef587beac3ed0d14f23345408efd7"
+      "bytes": 16764,
+      "sha256": "aede21cec0020397ffa9dcea1a6b74264f158e9232d3bea9986390475583b827",
+      "sourceSha256": "26acd068db2067e5bfc148ee4445bd0efdbef587beac3ed0d14f23345408efd7",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/assessment-automation/workflows/signal-completion.workflow.json",
       "destination": "portfolio-evidence/workflows/assessment-automation/workflows/signal-completion.workflow.json",
-      "bytes": 12865,
-      "sha256": "bab8685de7cde04b19a56d2b048016f0c377550fc3f41e04508e900aafa9ace4"
+      "bytes": 12525,
+      "sha256": "cc4aa406227616da101df042cbd7b7bd9aeaaba28a2df4947f7c7d9427f5abdc",
+      "sourceSha256": "bab8685de7cde04b19a56d2b048016f0c377550fc3f41e04508e900aafa9ace4",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/diagrams/diagram-quality-log.md",
       "bytes": 2026,
-      "sha256": "6f22fd95e25f2fa18a23f87c6e8dbd1d8ee8b6178c8e16324dbcaf91369b4b60"
+      "sha256": "6f22fd95e25f2fa18a23f87c6e8dbd1d8ee8b6178c8e16324dbcaf91369b4b60",
+      "sourceSha256": "6f22fd95e25f2fa18a23f87c6e8dbd1d8ee8b6178c8e16324dbcaf91369b4b60"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/diagrams/market-intelligence-quality-decision-tree.excalidraw",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/diagrams/market-intelligence-quality-decision-tree.excalidraw",
       "bytes": 45733,
-      "sha256": "416180a083a623fb982dd06ce485e380c90a74dd7522025a57ff2279ff49ef3f"
+      "sha256": "416180a083a623fb982dd06ce485e380c90a74dd7522025a57ff2279ff49ef3f",
+      "sourceSha256": "416180a083a623fb982dd06ce485e380c90a74dd7522025a57ff2279ff49ef3f"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/diagrams/market-intelligence-quality-decision-tree.png",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/diagrams/market-intelligence-quality-decision-tree.png",
       "bytes": 1296200,
-      "sha256": "5f7a2bf46858623c0d5862d8a279c30976359c0e8c419def47c77fb26111a09e"
+      "sha256": "5f7a2bf46858623c0d5862d8a279c30976359c0e8c419def47c77fb26111a09e",
+      "sourceSha256": "5f7a2bf46858623c0d5862d8a279c30976359c0e8c419def47c77fb26111a09e"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/diagrams/market-report-automation-workflow-diagram.excalidraw",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/diagrams/market-report-automation-workflow-diagram.excalidraw",
       "bytes": 44087,
-      "sha256": "0a78cb462ea883b6c5b1fb1df8482711461b374ffb8e501b7f1676c6215e964f"
+      "sha256": "0a78cb462ea883b6c5b1fb1df8482711461b374ffb8e501b7f1676c6215e964f",
+      "sourceSha256": "0a78cb462ea883b6c5b1fb1df8482711461b374ffb8e501b7f1676c6215e964f"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/diagrams/market-report-automation-workflow-diagram.png",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/diagrams/market-report-automation-workflow-diagram.png",
       "bytes": 1397025,
-      "sha256": "3f64854230033ca2692274e6a7f04053601f53dab32633a575a717cb6228b85a"
+      "sha256": "3f64854230033ca2692274e6a7f04053601f53dab32633a575a717cb6228b85a",
+      "sourceSha256": "3f64854230033ca2692274e6a7f04053601f53dab32633a575a717cb6228b85a"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/quality-control-specification.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/quality-control-specification.md",
       "bytes": 4384,
-      "sha256": "a2e3ef7a18c1b5526d3ff047163878fb9cb47fe39e47d93c16a5c2451f1fc719"
+      "sha256": "a2e3ef7a18c1b5526d3ff047163878fb9cb47fe39e47d93c16a5c2451f1fc719",
+      "sourceSha256": "a2e3ef7a18c1b5526d3ff047163878fb9cb47fe39e47d93c16a5c2451f1fc719"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/source-map.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/source-map.md",
       "bytes": 878,
-      "sha256": "e47c52610e87f11bc61ff8af8f693fea0f3c233ee5fad9a287f76ef48d227c84"
+      "sha256": "e47c52610e87f11bc61ff8af8f693fea0f3c233ee5fad9a287f76ef48d227c84",
+      "sourceSha256": "e47c52610e87f11bc61ff8af8f693fea0f3c233ee5fad9a287f76ef48d227c84"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/evidence/workflow-specification.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/evidence/workflow-specification.md",
       "bytes": 2649,
-      "sha256": "1a116ed394a82991c45ce3263891f06fc937fb4f70f99e03e042d07ec3c51347"
+      "sha256": "1a116ed394a82991c45ce3263891f06fc937fb4f70f99e03e042d07ec3c51347",
+      "sourceSha256": "1a116ed394a82991c45ce3263891f06fc937fb4f70f99e03e042d07ec3c51347"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/instructions/weekly-and-monthly-production.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/instructions/weekly-and-monthly-production.md",
       "bytes": 6566,
-      "sha256": "493b579833f69e8c0fc21b7c741f47a97d29be2a9e21ad5e2896e30551f4ed23"
+      "sha256": "493b579833f69e8c0fc21b7c741f47a97d29be2a9e21ad5e2896e30551f4ed23",
+      "sourceSha256": "493b579833f69e8c0fc21b7c741f47a97d29be2a9e21ad5e2896e30551f4ed23"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/instructions/weekly-runbook.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/instructions/weekly-runbook.md",
       "bytes": 860,
-      "sha256": "abffa1a42293fffb38c181f13512c8d2e8511d178deebfdd62a0424f91113589"
+      "sha256": "abffa1a42293fffb38c181f13512c8d2e8511d178deebfdd62a0424f91113589",
+      "sourceSha256": "abffa1a42293fffb38c181f13512c8d2e8511d178deebfdd62a0424f91113589"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/README.md",
       "destination": "portfolio-evidence/workflows/market-report-automation/README.md",
       "bytes": 6482,
-      "sha256": "a1f06c5ac4ec3d15e9a0b025a116f07666c0b0e09ce1ba0268de928e3357fad6"
+      "sha256": "a1f06c5ac4ec3d15e9a0b025a116f07666c0b0e09ce1ba0268de928e3357fad6",
+      "sourceSha256": "a1f06c5ac4ec3d15e9a0b025a116f07666c0b0e09ce1ba0268de928e3357fad6"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/samples/market-sample.svg",
       "destination": "portfolio-evidence/workflows/market-report-automation/samples/market-sample.svg",
-      "bytes": 1195,
-      "sha256": "e095b7b35e0beb0bde1022944a0986e8e333d9dc12024e43eab9cc36352dd0eb"
+      "bytes": 1183,
+      "sha256": "26c40adc654f1e73dfda8eb5d5af8f6e0ced97699802e02bfa00b5fc782c1f9a",
+      "sourceSha256": "e095b7b35e0beb0bde1022944a0986e8e333d9dc12024e43eab9cc36352dd0eb",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/samples/presentation-market-series.csv",
       "destination": "portfolio-evidence/workflows/market-report-automation/samples/presentation-market-series.csv",
       "bytes": 113,
-      "sha256": "546f499fb311047557a8b3ce1d3014b91355bfe472dbc73ce59bf2046b0d930d"
+      "sha256": "546f499fb311047557a8b3ce1d3014b91355bfe472dbc73ce59bf2046b0d930d",
+      "sourceSha256": "546f499fb311047557a8b3ce1d3014b91355bfe472dbc73ce59bf2046b0d930d"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/samples/source-manifest.json",
       "destination": "portfolio-evidence/workflows/market-report-automation/samples/source-manifest.json",
       "bytes": 317,
-      "sha256": "772b8ddb0e449e91068e75051d57cdbae7738440d3d65e4702f9498503fc52ff"
+      "sha256": "772b8ddb0e449e91068e75051d57cdbae7738440d3d65e4702f9498503fc52ff",
+      "sourceSha256": "772b8ddb0e449e91068e75051d57cdbae7738440d3d65e4702f9498503fc52ff"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/src/fetch_market_analysis.py",
       "destination": "portfolio-evidence/workflows/market-report-automation/src/fetch_market_analysis.py",
       "bytes": 9339,
-      "sha256": "fcb46fc983c69e81f9a39bedea5da6a6e381a615bb1e79e2b58dbc21da0a4d1c"
+      "sha256": "fcb46fc983c69e81f9a39bedea5da6a6e381a615bb1e79e2b58dbc21da0a4d1c",
+      "sourceSha256": "fcb46fc983c69e81f9a39bedea5da6a6e381a615bb1e79e2b58dbc21da0a4d1c"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/src/generate_market_chart.py",
       "destination": "portfolio-evidence/workflows/market-report-automation/src/generate_market_chart.py",
       "bytes": 2912,
-      "sha256": "e6bd874a7b5f2454492791f44c108deba2cbaf077c4220cab70c69197f48fa6c"
+      "sha256": "e6bd874a7b5f2454492791f44c108deba2cbaf077c4220cab70c69197f48fa6c",
+      "sourceSha256": "e6bd874a7b5f2454492791f44c108deba2cbaf077c4220cab70c69197f48fa6c"
     },
     {
       "source": "Portfolio Reference/workflows/market-report-automation/tests/test_generate_market_chart.py",
       "destination": "portfolio-evidence/workflows/market-report-automation/tests/test_generate_market_chart.py",
       "bytes": 999,
-      "sha256": "af2f726b05b8505b4f86a604c595ef993a1174e16a3ff97acc059ed54d7b53e0"
+      "sha256": "af2f726b05b8505b4f86a604c595ef993a1174e16a3ff97acc059ed54d7b53e0",
+      "sourceSha256": "af2f726b05b8505b4f86a604c595ef993a1174e16a3ff97acc059ed54d7b53e0"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/diagrams/diagram-quality-log.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/diagrams/diagram-quality-log.md",
       "bytes": 1529,
-      "sha256": "2e8ce2ac1ec201a0ec527772482172ee3aebccd433ba9330ce3f97afcaa7be81"
+      "sha256": "2e8ce2ac1ec201a0ec527772482172ee3aebccd433ba9330ce3f97afcaa7be81",
+      "sourceSha256": "2e8ce2ac1ec201a0ec527772482172ee3aebccd433ba9330ce3f97afcaa7be81"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/diagrams/research-quality-decision-tree.excalidraw",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/diagrams/research-quality-decision-tree.excalidraw",
       "bytes": 58736,
-      "sha256": "8652a61f71b6e8fd856b0f928131486adc2c9b78b5b46d3c4a0478b7577146d9"
+      "sha256": "8652a61f71b6e8fd856b0f928131486adc2c9b78b5b46d3c4a0478b7577146d9",
+      "sourceSha256": "8652a61f71b6e8fd856b0f928131486adc2c9b78b5b46d3c4a0478b7577146d9"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/diagrams/research-quality-decision-tree.png",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/diagrams/research-quality-decision-tree.png",
       "bytes": 1124167,
-      "sha256": "bfb3ac9520f0bf330606720cb19d9ec2d927f72f818fa4fb647abb6abac995c3"
+      "sha256": "bfb3ac9520f0bf330606720cb19d9ec2d927f72f818fa4fb647abb6abac995c3",
+      "sourceSha256": "bfb3ac9520f0bf330606720cb19d9ec2d927f72f818fa4fb647abb6abac995c3"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/diagrams/research-report-builder-workflow-diagram.excalidraw",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/diagrams/research-report-builder-workflow-diagram.excalidraw",
       "bytes": 35436,
-      "sha256": "d8884482bfc9d04436b8d089c1fd0b22acda997b49997905a1d77609c348449d"
+      "sha256": "d8884482bfc9d04436b8d089c1fd0b22acda997b49997905a1d77609c348449d",
+      "sourceSha256": "d8884482bfc9d04436b8d089c1fd0b22acda997b49997905a1d77609c348449d"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/diagrams/research-report-builder-workflow-diagram.png",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/diagrams/research-report-builder-workflow-diagram.png",
       "bytes": 608020,
-      "sha256": "a1c441dc3865f44ab5f6ca5b62dce694133ed2bb4db8281f047c9ecd85241e05"
+      "sha256": "a1c441dc3865f44ab5f6ca5b62dce694133ed2bb4db8281f047c9ecd85241e05",
+      "sourceSha256": "a1c441dc3865f44ab5f6ca5b62dce694133ed2bb4db8281f047c9ecd85241e05"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/quality-control-specification.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/quality-control-specification.md",
       "bytes": 2896,
-      "sha256": "2cbf4f717bb2497dd46fb0ca9365fc821154af2e99210a159cd9c51866f70d22"
+      "sha256": "2cbf4f717bb2497dd46fb0ca9365fc821154af2e99210a159cd9c51866f70d22",
+      "sourceSha256": "2cbf4f717bb2497dd46fb0ca9365fc821154af2e99210a159cd9c51866f70d22"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/source-map.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/source-map.md",
       "bytes": 702,
-      "sha256": "ef1ecaeab3b28d49c9b73091ec33209517c9241e3716fe0dd105d0e71dafa23a"
+      "sha256": "ef1ecaeab3b28d49c9b73091ec33209517c9241e3716fe0dd105d0e71dafa23a",
+      "sourceSha256": "ef1ecaeab3b28d49c9b73091ec33209517c9241e3716fe0dd105d0e71dafa23a"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/evidence/workflow-specification.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/evidence/workflow-specification.md",
       "bytes": 2512,
-      "sha256": "edc02c88f0aba44c50e876ee5456a9b1ef32d274d1bfaa75fb75aeb65347d432"
+      "sha256": "edc02c88f0aba44c50e876ee5456a9b1ef32d274d1bfaa75fb75aeb65347d432",
+      "sourceSha256": "edc02c88f0aba44c50e876ee5456a9b1ef32d274d1bfaa75fb75aeb65347d432"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/instructions/evidence-first-workflow.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/instructions/evidence-first-workflow.md",
       "bytes": 743,
-      "sha256": "4c2fa9d43f76ce6b4a47ee8243d6136ece2a93b8d330f6523f64b49cc22bb6e3"
+      "sha256": "4c2fa9d43f76ce6b4a47ee8243d6136ece2a93b8d330f6523f64b49cc22bb6e3",
+      "sourceSha256": "4c2fa9d43f76ce6b4a47ee8243d6136ece2a93b8d330f6523f64b49cc22bb6e3"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/instructions/long-form-research-report-production.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/instructions/long-form-research-report-production.md",
       "bytes": 5169,
-      "sha256": "4f59b5b6abd9073af2423ace18877621021fb947e05d2431a1878f90deaca9b9"
+      "sha256": "4f59b5b6abd9073af2423ace18877621021fb947e05d2431a1878f90deaca9b9",
+      "sourceSha256": "4f59b5b6abd9073af2423ace18877621021fb947e05d2431a1878f90deaca9b9"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/README.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/README.md",
       "bytes": 6178,
-      "sha256": "c50bcb637bd89b59d68a82d9cc5162b254751d3ea11f60366b5386bb6e1edc4d"
+      "sha256": "c50bcb637bd89b59d68a82d9cc5162b254751d3ea11f60366b5386bb6e1edc4d",
+      "sourceSha256": "c50bcb637bd89b59d68a82d9cc5162b254751d3ea11f60366b5386bb6e1edc4d"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/context/evidence_matrix.csv",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/context/evidence_matrix.csv",
-      "bytes": 94,
-      "sha256": "17834778139a55c787e8d777cfbc06f0689db8648fe9efc1e935e7efd548ecdf"
+      "bytes": 93,
+      "sha256": "84ef18615213b92b28370a24c8dfd006c2db9648be0cd0ba0eaaac96ea745ac6",
+      "sourceSha256": "17834778139a55c787e8d777cfbc06f0689db8648fe9efc1e935e7efd548ecdf",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/context/source_log.csv",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/context/source_log.csv",
-      "bytes": 105,
-      "sha256": "cdd11e13454474a4b985b0177683fdce4bf3721bec7862f3e2efae0fb5231a4d"
+      "bytes": 104,
+      "sha256": "736eb4aff4ddb693aa6f62d72021535f79e681b25fc03bf16bd2e2413861a8da",
+      "sourceSha256": "cdd11e13454474a4b985b0177683fdce4bf3721bec7862f3e2efae0fb5231a4d",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/output/report.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/output/report.md",
-      "bytes": 806,
-      "sha256": "d269f13c241ca4ccd807e946200510623136f25a3ce6839a3727b74354d7d6bc"
+      "bytes": 771,
+      "sha256": "fec72fef4efea2a621bc42bdf60b2bb485df7d907ca81770fdb076da96ac10b0",
+      "sourceSha256": "d269f13c241ca4ccd807e946200510623136f25a3ce6839a3727b74354d7d6bc",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/research_brief.md",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/research_brief.md",
-      "bytes": 628,
-      "sha256": "049c8cc25cebc3959aa1a44ec3427a481084f0695f5a787c63c58cdfa0a1f2a6"
+      "bytes": 583,
+      "sha256": "06a4e9bd472b050b0eb870401709a5a6f8aba4c7d183bc388a20ab740ef50204",
+      "sourceSha256": "049c8cc25cebc3959aa1a44ec3427a481084f0695f5a787c63c58cdfa0a1f2a6",
+      "transform": "Text line endings normalized to LF."
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/scripts/create_evidence_matrix.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/scripts/create_evidence_matrix.py",
       "bytes": 769,
-      "sha256": "1c9199ff4b63b3fc567726c66915b829eb2a7f49ea2e3ccbd415f8f8e288f2eb"
+      "sha256": "1c9199ff4b63b3fc567726c66915b829eb2a7f49ea2e3ccbd415f8f8e288f2eb",
+      "sourceSha256": "1c9199ff4b63b3fc567726c66915b829eb2a7f49ea2e3ccbd415f8f8e288f2eb"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/scripts/create_research_brief.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/scripts/create_research_brief.py",
       "bytes": 1289,
-      "sha256": "a8185e3ca9c41b0ef1c8af26c597f7620a7b6a044b6450b90af2059c8bdfd690"
+      "sha256": "a8185e3ca9c41b0ef1c8af26c597f7620a7b6a044b6450b90af2059c8bdfd690",
+      "sourceSha256": "a8185e3ca9c41b0ef1c8af26c597f7620a7b6a044b6450b90af2059c8bdfd690"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/scripts/create_source_log.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/scripts/create_source_log.py",
       "bytes": 777,
-      "sha256": "2a3c13ecb63a4198350ec810f318b3a9bffbdb127de5419a0e6800876aa4f68c"
+      "sha256": "2a3c13ecb63a4198350ec810f318b3a9bffbdb127de5419a0e6800876aa4f68c",
+      "sourceSha256": "2a3c13ecb63a4198350ec810f318b3a9bffbdb127de5419a0e6800876aa4f68c"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/scripts/outline_to_report_skeleton.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/scripts/outline_to_report_skeleton.py",
       "bytes": 4660,
-      "sha256": "8653ec27077d029d61d4c6edc8813f438754c088df434ac3354f229f64c219b8"
+      "sha256": "8653ec27077d029d61d4c6edc8813f438754c088df434ac3354f229f64c219b8",
+      "sourceSha256": "8653ec27077d029d61d4c6edc8813f438754c088df434ac3354f229f64c219b8"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/samples/demo-workspace/scripts/stage_research_workspace.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/samples/demo-workspace/scripts/stage_research_workspace.py",
       "bytes": 2656,
-      "sha256": "27cec9fd824f2c57abe771fe7abf7f64565d2f8f3129818dd3627b77c15e47b2"
+      "sha256": "27cec9fd824f2c57abe771fe7abf7f64565d2f8f3129818dd3627b77c15e47b2",
+      "sourceSha256": "27cec9fd824f2c57abe771fe7abf7f64565d2f8f3129818dd3627b77c15e47b2"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/src/create_evidence_matrix.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/src/create_evidence_matrix.py",
       "bytes": 769,
-      "sha256": "1c9199ff4b63b3fc567726c66915b829eb2a7f49ea2e3ccbd415f8f8e288f2eb"
+      "sha256": "1c9199ff4b63b3fc567726c66915b829eb2a7f49ea2e3ccbd415f8f8e288f2eb",
+      "sourceSha256": "1c9199ff4b63b3fc567726c66915b829eb2a7f49ea2e3ccbd415f8f8e288f2eb"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/src/create_research_brief.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/src/create_research_brief.py",
       "bytes": 1289,
-      "sha256": "a8185e3ca9c41b0ef1c8af26c597f7620a7b6a044b6450b90af2059c8bdfd690"
+      "sha256": "a8185e3ca9c41b0ef1c8af26c597f7620a7b6a044b6450b90af2059c8bdfd690",
+      "sourceSha256": "a8185e3ca9c41b0ef1c8af26c597f7620a7b6a044b6450b90af2059c8bdfd690"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/src/create_source_log.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/src/create_source_log.py",
       "bytes": 777,
-      "sha256": "2a3c13ecb63a4198350ec810f318b3a9bffbdb127de5419a0e6800876aa4f68c"
+      "sha256": "2a3c13ecb63a4198350ec810f318b3a9bffbdb127de5419a0e6800876aa4f68c",
+      "sourceSha256": "2a3c13ecb63a4198350ec810f318b3a9bffbdb127de5419a0e6800876aa4f68c"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/src/outline_to_report_skeleton.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/src/outline_to_report_skeleton.py",
       "bytes": 4660,
-      "sha256": "8653ec27077d029d61d4c6edc8813f438754c088df434ac3354f229f64c219b8"
+      "sha256": "8653ec27077d029d61d4c6edc8813f438754c088df434ac3354f229f64c219b8",
+      "sourceSha256": "8653ec27077d029d61d4c6edc8813f438754c088df434ac3354f229f64c219b8"
     },
     {
       "source": "Portfolio Reference/workflows/research-report-builder/src/stage_research_workspace.py",
       "destination": "portfolio-evidence/workflows/research-report-builder/src/stage_research_workspace.py",
       "bytes": 2656,
-      "sha256": "27cec9fd824f2c57abe771fe7abf7f64565d2f8f3129818dd3627b77c15e47b2"
+      "sha256": "27cec9fd824f2c57abe771fe7abf7f64565d2f8f3129818dd3627b77c15e47b2",
+      "sourceSha256": "27cec9fd824f2c57abe771fe7abf7f64565d2f8f3129818dd3627b77c15e47b2"
     }
   ]
 }
